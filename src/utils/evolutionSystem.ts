@@ -1,5 +1,17 @@
 import { Organism, EvolutionStage } from "@/types/ecosystem";
 
+// Define the EvolutionMap type
+type EvolutionMap = {
+  [key: string]: {
+    stage: number;
+    threshold: number;
+    name: string;
+    icon: string;
+    traits: string[];
+    description: string;
+  }[];
+};
+
 // Define evolution paths for each organism type
 export const evolutionPaths: EvolutionMap = {
   // Plants/Producers

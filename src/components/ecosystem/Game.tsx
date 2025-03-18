@@ -77,45 +77,44 @@ const Game = () => {
   const evolutionPanelMinHeight = Math.max(300, organismTypeStages.size * 150);
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      <div className="flex flex-col md:flex-row gap-4 flex-grow">
-        <div className="md:w-3/4 flex flex-col">
-          <StatsPanel 
-            biomeHealth={biomeHealth} 
+    <div className="flex h-full gap-4">
+      {/* Left side: Biome view and controls */}
+      <div className="w-3/4 flex flex-col h-full">
+        {/* Stats Panel (above) */}
+        <StatsPanel 
+          biomeHealth={biomeHealth} 
+          waterLevel={waterLevel}
+          sunlightLevel={sunlightLevel}
+          onAdjustWater={adjustWater}
+          onAdjustSunlight={adjustSunlight}
+        />
+        
+        {/* Ecosystem Window (middle) */}
+        <div className="flex-grow my-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <BiomeView 
+            biomeType={biome}
+            organisms={organisms}
+            onBiomeClick={handleBiomeClick}
+            selectedSpecies={selectedSpecies}
+            onOrganismClick={handleOrganismClick}
             waterLevel={waterLevel}
             sunlightLevel={sunlightLevel}
-            onAdjustWater={adjustWater}
-            onAdjustSunlight={adjustSunlight}
           />
-          <div className="mt-4 flex-grow">
-            <BiomeView 
-              biomeType={biome}
-              organisms={organisms}
-              onBiomeClick={handleBiomeClick}
-              selectedSpecies={selectedSpecies}
-              onOrganismClick={handleOrganismClick}
-              waterLevel={waterLevel}
-              sunlightLevel={sunlightLevel}
-            />
-          </div>
         </div>
-        <div className="md:w-1/4">
-          <ResizablePanelGroup direction="vertical" className="min-h-[400px]">
-            <ResizablePanel defaultSize={70} minSize={30}>
-              <EvolutionPanel organisms={organisms} />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={30} minSize={20}>
-              <div className="h-full overflow-hidden">
-                <SpeciesPanel 
-                  biomeType={biome} 
-                  onSelectSpecies={handleSpeciesSelect} 
-                  selectedSpecies={selectedSpecies}
-                />
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+        
+        {/* Species Panel (below) */}
+        <div className="h-40 min-h-40 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <SpeciesPanel 
+            biomeType={biome} 
+            onSelectSpecies={handleSpeciesSelect} 
+            selectedSpecies={selectedSpecies}
+          />
         </div>
+      </div>
+      
+      {/* Right side: Evolution Panel */}
+      <div className="w-1/4 h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <EvolutionPanel organisms={organisms} />
       </div>
     </div>
   );

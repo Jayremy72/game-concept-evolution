@@ -25,14 +25,10 @@ const EvolutionPanel = ({ organisms }: EvolutionPanelProps) => {
     acc[key].push(org);
     return acc;
   }, {} as Record<string, Organism[]>);
-  
-  // Calculate dynamic height based on the number of organism types
-  const organismGroups = Object.keys(organizedOrganisms).length;
-  const minHeight = Math.max(300, organismGroups * 180);
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md h-full flex flex-col">
-      <div className="flex justify-between items-center mb-3">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800">
+      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-bold">Evolution Progress</h2>
         <HoverCard>
           <HoverCardTrigger asChild>
@@ -57,8 +53,8 @@ const EvolutionPanel = ({ organisms }: EvolutionPanelProps) => {
         </HoverCard>
       </div>
 
-      <ScrollArea className="flex-grow pr-2" style={{ minHeight: `${minHeight}px` }}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-grow p-4 h-full overflow-auto">
+        <div className="space-y-4 pr-2">
           {Object.entries(organizedOrganisms).map(([key, orgs]) => {
             const [type, stageStr] = key.split("-");
             const stage = parseInt(stageStr);

@@ -72,54 +72,55 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
       )}
       onClick={() => onSelectSpecies(species.id)}
     >
-      <span className="text-xl">{species.icon}</span>
+      <span className="text-xl mr-1">{species.icon}</span>
       <span>{species.name}</span>
     </Button>
   );
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md h-full flex flex-col">
-      <h2 className="text-lg font-bold mb-3">Add Species</h2>
-      
-      <Tabs defaultValue="producers" className="flex-grow flex flex-col">
-        <TabsList className="w-full mb-2">
-          <TabsTrigger value="producers" className="flex-1">Producers</TabsTrigger>
-          <TabsTrigger value="consumers" className="flex-1">Consumers</TabsTrigger>
-          <TabsTrigger value="decomposers" className="flex-1">Decomposers</TabsTrigger>
-        </TabsList>
+    <div className="h-full bg-white dark:bg-gray-800 p-2">
+      <Tabs defaultValue="producers" className="h-full flex flex-col">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-bold">Add Species</h2>
+          <TabsList className="grid grid-cols-3 w-auto">
+            <TabsTrigger value="producers">Producers</TabsTrigger>
+            <TabsTrigger value="consumers">Consumers</TabsTrigger>
+            <TabsTrigger value="decomposers">Decomposers</TabsTrigger>
+          </TabsList>
+        </div>
         
-        <div className="flex-grow overflow-hidden">
-          <TabsContent value="producers" className="h-full m-0 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
+        <div className="flex-grow overflow-auto">
+          <TabsContent value="producers" className="h-full m-0 p-0">
+            <ScrollArea className="h-full" orientation="horizontal">
+              <div className="flex flex-wrap gap-2">
                 {producers.map(renderSpeciesButton)}
               </div>
             </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="consumers" className="h-full m-0 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
+          <TabsContent value="consumers" className="h-full m-0 p-0">
+            <ScrollArea className="h-full" orientation="horizontal">
+              <div className="flex flex-wrap gap-2">
                 {consumers.map(renderSpeciesButton)}
               </div>
             </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="decomposers" className="h-full m-0 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
+          <TabsContent value="decomposers" className="h-full m-0 p-0">
+            <ScrollArea className="h-full" orientation="horizontal">
+              <div className="flex flex-wrap gap-2">
                 {decomposers.map(renderSpeciesButton)}
               </div>
             </ScrollArea>
           </TabsContent>
         </div>
+        
+        <div className="mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Select a species, then click on the ecosystem to place it.
+          </p>
+        </div>
       </Tabs>
-      
-      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Select a species, then click on the ecosystem to place it.
-        </p>
-      </div>
     </div>
   );
 };
