@@ -3,6 +3,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Cloud, Droplets, Sun } from "lucide-react";
 import { Organism } from "@/types/ecosystem";
+import { getEvolutionInfo } from "@/utils/evolutionSystem";
 
 interface BiomeViewProps {
   biomeType: string;
@@ -37,42 +38,41 @@ const BiomeView = ({
     }
   };
 
-  const getOrganismStyles = (type: string) => {
+  const getOrganismStyles = (type: string, stage: number) => {
+    // Base styles based on type
+    let baseStyle = "";
     switch (type) {
       case "tree":
-        return "text-green-800 text-3xl";
+        baseStyle = "text-green-800";
+        break;
       case "grass":
-        return "text-green-500 text-xl";
+        baseStyle = "text-green-500";
+        break;
       case "flower":
-        return "text-pink-500 text-xl";
+        baseStyle = "text-pink-500";
+        break;
       case "rabbit":
-        return "text-gray-400 text-xl";
+        baseStyle = "text-gray-400";
+        break;
       case "fox":
-        return "text-orange-500 text-xl";
+        baseStyle = "text-orange-500";
+        break;
       case "fungi":
-        return "text-purple-400 text-xl";
+        baseStyle = "text-purple-400";
+        break;
       default:
-        return "text-gray-800 text-xl";
+        baseStyle = "text-gray-800";
     }
+    
+    // Size based on evolution stage
+    const sizeClass = stage === 0 ? "text-xl" : stage === 1 ? "text-2xl" : "text-3xl";
+    
+    return `${baseStyle} ${sizeClass}`;
   };
 
-  const getOrganismIcon = (type: string) => {
-    switch (type) {
-      case "tree":
-        return "🌳";
-      case "grass":
-        return "🌿";
-      case "flower":
-        return "🌸";
-      case "rabbit":
-        return "🐰";
-      case "fox":
-        return "🦊";
-      case "fungi":
-        return "🍄";
-      default:
-        return "❓";
-    }
+  const getOrganismIcon = (type: string, stage: number) => {
+    const evolutionInfo = getEvolutionInfo(type, stage);
+    return evolutionInfo.icon;
   };
 
   const handleAreaClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -111,23 +111,31 @@ const BiomeView = ({
         )}
 
         {/* Render organisms */}
-        {organisms.map((org) => (
-          <div
-            key={org.id}
-            className={cn(
-              "absolute transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer",
-              getOrganismStyles(org.type)
-            )}
-            style={{ left: `${org.position.x}%`, top: `${org.position.y}%` }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOrganismClick(org.id);
-            }}
-            title={`${org.type} (Health: ${org.health})`}
-          >
-            {getOrganismIcon(org.type)}
-          </div>
-        ))}
+        {organisms.map((org) => {
+          const evolutionInfo = getEvolutionInfo(org.type, org.stage);
+          return (
+            <div
+              key={org.id}
+              className={cn(
+                "absolute transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer",
+                getOrganismStyles(org.type, org.stage)
+              )}
+              style={{ left: `${org.position.x}%`, top: `${org.position.y}%` }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOrganismClick(org.id);
+              }}
+              title={`${evolutionInfo.name} (Health: ${org.health}, Adaptation: ${org.adaptationPoints})`}
+            >
+              {getOrganismIcon(org.type, org.stage)}
+              {org.adaptationPoints > 0 && (
+                <div className="absolute -top-3 -right-3 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {Math.min(org.stage + 1, 2)}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* Ground layer for forest biome */}
         {biomeType === "forest" && (

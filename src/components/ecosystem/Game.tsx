@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
 import StatsPanel from "./StatsPanel";
+import EvolutionPanel from "./EvolutionPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { useBiome } from "@/hooks/useBiome";
 
@@ -52,6 +53,20 @@ const Game = () => {
     }
   };
 
+  const handleOrganismClick = (id: string) => {
+    const organism = organisms.find(o => o.id === id);
+    if (organism) {
+      // Show evolution info before removing
+      const { type, stage, adaptationPoints, health, traits } = organism;
+      toast({
+        title: `Removing ${type} (Stage ${stage + 1})`,
+        description: `Health: ${Math.round(health)}, Adaptation: ${Math.round(adaptationPoints)}, Traits: ${traits.join(", ")}`,
+        duration: 3000,
+      });
+    }
+    removeOrganism(id);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
       <div className="md:col-span-3 order-2 md:order-1">
@@ -60,7 +75,7 @@ const Game = () => {
           organisms={organisms}
           onBiomeClick={handleBiomeClick}
           selectedSpecies={selectedSpecies}
-          onOrganismClick={removeOrganism}
+          onOrganismClick={handleOrganismClick}
           waterLevel={waterLevel}
           sunlightLevel={sunlightLevel}
         />
@@ -73,6 +88,7 @@ const Game = () => {
           onAdjustWater={adjustWater}
           onAdjustSunlight={adjustSunlight}
         />
+        <EvolutionPanel organisms={organisms} />
         <SpeciesPanel 
           biomeType={biome} 
           onSelectSpecies={handleSpeciesSelect} 

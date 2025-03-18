@@ -2,6 +2,11 @@
 import { useState, useEffect } from "react";
 import { Organism } from "@/types/ecosystem";
 import { v4 as uuidv4 } from "uuid";
+import { 
+  getNextEvolutionStage, 
+  getEvolutionInfo, 
+  calculateAdaptationGain 
+} from "@/utils/evolutionSystem";
 
 interface OrganismPosition {
   x: number;
@@ -21,6 +26,7 @@ export function useBiome() {
       // Update organism health based on environmental factors
       const updatedOrganisms = organisms.map(org => {
         let healthChange = 0;
+        let adaptationGain = 0;
         
         // Apply environmental effects
         switch (org.type) {
@@ -73,13 +79,49 @@ export function useBiome() {
             if (waterLevel > 40) healthChange += 1;
             break;
         }
+
+        // Apply traits effects
+        if (org.traits.includes("drought-resistant") && waterLevel < 30) {
+          healthChange += 2; // Less damage from drought
+        }
+        
+        if (org.traits.includes("heat-resistant") && sunlightLevel > 80) {
+          healthChange += 2; // Less damage from high heat
+        }
+        
+        if (org.traits.includes("water-efficient")) {
+          if (waterLevel < 40) healthChange += 1; // Better survival in low water
+        }
+        
+        if (org.traits.includes("fast-growing") && org.health < 50) {
+          healthChange += 1; // Faster recovery
+        }
         
         // Apply random small variations
         healthChange += Math.random() * 2 - 1;
         
+        // Calculate adaptation points gain - organisms under stress but surviving adapt
+        if (org.health > 20 && org.health < 80) {
+          adaptationGain = calculateAdaptationGain(org, waterLevel, sunlightLevel, biome);
+        }
+        
+        // Check for evolution to next stage
+        const newAdaptationPoints = org.adaptationPoints + adaptationGain;
+        const nextStage = getNextEvolutionStage(org.type, org.stage, newAdaptationPoints);
+        
+        // If evolving to a new stage, get the new traits
+        let newTraits = [...org.traits];
+        if (nextStage > org.stage) {
+          const evolutionInfo = getEvolutionInfo(org.type, nextStage);
+          newTraits = evolutionInfo.traits;
+        }
+        
         return {
           ...org,
-          health: Math.max(0, Math.min(100, org.health + healthChange))
+          health: Math.max(0, Math.min(100, org.health + healthChange)),
+          adaptationPoints: newAdaptationPoints,
+          stage: nextStage,
+          traits: newTraits
         };
       });
       
@@ -124,7 +166,7 @@ export function useBiome() {
     }, 2000); // Run simulation every 2 seconds
     
     return () => clearInterval(intervalId);
-  }, [organisms, waterLevel, sunlightLevel]);
+  }, [organisms, waterLevel, sunlightLevel, biome]);
 
   // Add a new organism to the ecosystem
   const addOrganism = (type: string, position: OrganismPosition): boolean => {
@@ -161,12 +203,18 @@ export function useBiome() {
       return false;
     }
     
+    // Get initial evolution info
+    const evolutionInfo = getEvolutionInfo(type, 0);
+    
     // Add the organism
     const newOrganism: Organism = {
       id: uuidv4(),
       type,
       position,
       health: 100, // Start with full health
+      adaptationPoints: 0, // Start with no adaptation points
+      stage: 0, // Start at the first evolution stage
+      traits: evolutionInfo.traits // Get initial traits
     };
     
     setOrganisms(prev => [...prev, newOrganism]);
