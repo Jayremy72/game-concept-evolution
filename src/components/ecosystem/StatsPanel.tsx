@@ -3,6 +3,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Droplets, Sun, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatsPanelProps {
   biomeHealth: number;
@@ -10,6 +11,7 @@ interface StatsPanelProps {
   sunlightLevel: number;
   onAdjustWater: (value: number) => void;
   onAdjustSunlight: (value: number) => void;
+  className?: string;
 }
 
 const StatsPanel = ({
@@ -17,7 +19,8 @@ const StatsPanel = ({
   waterLevel,
   sunlightLevel,
   onAdjustWater,
-  onAdjustSunlight
+  onAdjustSunlight,
+  className
 }: StatsPanelProps) => {
   // Function to determine health status
   const getHealthStatus = () => {
@@ -30,7 +33,7 @@ const StatsPanel = ({
   const healthStatus = getHealthStatus();
 
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+    <div className={cn("p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md", className)}>
       <h2 className="text-lg font-bold mb-3">Ecosystem Health</h2>
       
       <div className="space-y-6">
