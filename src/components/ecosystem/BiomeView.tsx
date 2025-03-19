@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Cloud, Droplets, Sun } from "lucide-react";
 import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Season } from "@/hooks/useSeasons";
+import { useToast } from "@/hooks/use-toast";
 
 interface BiomeViewProps {
   biomeType: string;
@@ -27,6 +28,36 @@ const BiomeView = ({
   sunlightLevel,
   currentSeason = "spring"
 }: BiomeViewProps) => {
+  const { toast } = useToast();
+  const [populationInfo, setPopulationInfo] = useState({
+    total: 0,
+    producers: 0,
+    consumers: 0,
+    decomposers: 0
+  });
+  
+  // Update population info
+  useEffect(() => {
+    const producers = organisms.filter(org => 
+      ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(org.type)
+    ).length;
+    
+    const consumers = organisms.filter(org => 
+      ["rabbit", "lizard", "fish", "fox", "snake", "crab"].includes(org.type)
+    ).length;
+    
+    const decomposers = organisms.filter(org => 
+      ["fungi", "beetle", "starfish"].includes(org.type)
+    ).length;
+    
+    setPopulationInfo({
+      total: organisms.length,
+      producers,
+      consumers,
+      decomposers
+    });
+  }, [organisms]);
+  
   // Define biome background based on type and season
   const getBiomeBackground = () => {
     // Base biome colors
@@ -172,7 +203,7 @@ const BiomeView = ({
   };
 
   return (
-    <div className="relative h-[70vh] rounded-lg overflow-hidden shadow-lg">
+    <div className="relative h-[75vh] rounded-lg overflow-hidden shadow-lg">
       <div
         className={cn(
           "absolute inset-0 w-full h-full cursor-pointer",
@@ -193,6 +224,14 @@ const BiomeView = ({
           </div>
           <div className="bg-white/30 backdrop-blur-sm p-2 rounded-full">
             <Cloud className="h-6 w-6 text-white" />
+          </div>
+        </div>
+
+        {/* Population info */}
+        <div className="absolute top-4 left-4 bg-white/30 backdrop-blur-sm p-2 rounded-md text-sm">
+          <div className="flex items-center space-x-2">
+            <span className="font-medium">Population:</span>
+            <span className="text-green-700 dark:text-green-400">{populationInfo.total}</span>
           </div>
         </div>
 
@@ -217,7 +256,7 @@ const BiomeView = ({
                 e.stopPropagation();
                 onOrganismClick(org.id);
               }}
-              title={`${evolutionInfo.name} (Health: ${org.health}, Adaptation: ${org.adaptationPoints})`}
+              title={`${evolutionInfo.name} (Health: ${Math.round(org.health)}, Adaptation: ${Math.round(org.adaptationPoints)})`}
             >
               {getOrganismIcon(org.type, org.stage)}
               {org.adaptationPoints > 0 && (

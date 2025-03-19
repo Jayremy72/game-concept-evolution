@@ -4,6 +4,12 @@ import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EvolutionIndicatorProps {
   organism: Organism;
@@ -51,48 +57,86 @@ const EvolutionIndicator: React.FC<EvolutionIndicatorProps> = ({
     }
   };
   
+  // Get organism status based on health
+  const getHealthStatus = () => {
+    if (health > 80) return { label: "Thriving", color: "bg-green-500" };
+    if (health > 60) return { label: "Healthy", color: "bg-green-400" };
+    if (health > 40) return { label: "Stable", color: "bg-yellow-400" };
+    if (health > 20) return { label: "Stressed", color: "bg-orange-400" };
+    return { label: "Critical", color: "bg-red-500" };
+  };
+  
+  const status = getHealthStatus();
+  
   // Animation when close to evolving
   const isCloseToEvolving = !isMaxEvolution && progressPercent > 90;
   const isGainingAdaptation = !isMaxEvolution && health > 20 && health < 80;
   
   return (
-    <div 
-      className={`
-        relative p-1 rounded-md cursor-pointer 
-        ${isCloseToEvolving ? 'animate-pulse bg-yellow-50 dark:bg-yellow-900/20' : ''}
-        ${isGainingAdaptation ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
-        ${health < 30 ? 'bg-red-50 dark:bg-red-900/20' : ''}
-        hover:bg-gray-100 dark:hover:bg-gray-800
-      `}
-      onClick={onClick}
-    >
-      {stageIndicator()}
-      
-      <div className="text-center mb-1">
-        <span className="text-xl">{currentEvolution.icon}</span>
-        {isGainingAdaptation && (
-          <span className="absolute -top-1 -right-1 text-xs text-blue-600 dark:text-blue-400">+</span>
-        )}
-      </div>
-      
-      {!isMaxEvolution ? (
-        <div className="w-10 mx-auto">
-          <Progress 
-            value={progressPercent} 
-            className="h-1" 
-          />
-          {isGainingAdaptation && (
-            <div className="text-[8px] text-center text-blue-600 dark:text-blue-400 mt-0.5">
-              {Math.round(adaptationPoints)}/{nextEvolution.threshold}
+    <TooltipProvider>
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <div 
+            className={`
+              relative p-1 rounded-md cursor-pointer 
+              ${isCloseToEvolving ? 'animate-pulse bg-yellow-50 dark:bg-yellow-900/20' : ''}
+              hover:bg-gray-100 dark:hover:bg-gray-800
+            `}
+            onClick={onClick}
+          >
+            {stageIndicator()}
+            
+            <div className="text-center mb-1">
+              <span className="text-xl">{currentEvolution.icon}</span>
+              {isGainingAdaptation && (
+                <span className="absolute -top-1 -right-1 text-xs text-blue-600 dark:text-blue-400">+</span>
+              )}
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="w-10 h-1 mx-auto bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
-          <div className="h-full w-full bg-purple-500"></div>
-        </div>
-      )}
-    </div>
+            
+            {/* Health status indicator */}
+            <div className="w-10 mx-auto mb-1">
+              <div className={`h-1 w-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700`}>
+                <div 
+                  className={`h-full transition-all duration-500 ${status.color}`}
+                  style={{ width: `${health}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Evolution progress */}
+            {!isMaxEvolution ? (
+              <div className="w-10 mx-auto">
+                <Progress 
+                  value={progressPercent} 
+                  className="h-1" 
+                />
+                {isGainingAdaptation && (
+                  <div className="text-[8px] text-center text-blue-600 dark:text-blue-400 mt-0.5">
+                    {Math.round(adaptationPoints)}/{nextEvolution.threshold}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-10 h-1 mx-auto bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
+                <div className="h-full w-full bg-purple-500"></div>
+              </div>
+            )}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="right" align="center" className="z-50">
+          <div className="text-sm">
+            <p className="font-bold">{currentEvolution.name}</p>
+            <p>Health: {Math.round(health)}% - {status.label}</p>
+            {!isMaxEvolution && (
+              <p>Adaptation: {Math.round(adaptationPoints)}/{nextEvolution.threshold}</p>
+            )}
+            {isMaxEvolution && (
+              <p className="text-purple-500">Fully Evolved</p>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
