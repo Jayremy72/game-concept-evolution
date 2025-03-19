@@ -91,7 +91,7 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
         
         <div className="flex-grow overflow-auto">
           <TabsContent value="producers" className="h-full m-0 p-0">
-            <ScrollArea className="h-full" orientation="horizontal">
+            <ScrollArea className="h-full">
               <div className="flex flex-wrap gap-2">
                 {producers.map(renderSpeciesButton)}
               </div>
@@ -99,7 +99,7 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
           </TabsContent>
           
           <TabsContent value="consumers" className="h-full m-0 p-0">
-            <ScrollArea className="h-full" orientation="horizontal">
+            <ScrollArea className="h-full">
               <div className="flex flex-wrap gap-2">
                 {consumers.map(renderSpeciesButton)}
               </div>
@@ -107,7 +107,7 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
           </TabsContent>
           
           <TabsContent value="decomposers" className="h-full m-0 p-0">
-            <ScrollArea className="h-full" orientation="horizontal">
+            <ScrollArea className="h-full">
               <div className="flex flex-wrap gap-2">
                 {decomposers.map(renderSpeciesButton)}
               </div>
