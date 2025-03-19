@@ -12,8 +12,9 @@ import SeasonIndicator from './components/ecosystem/SeasonIndicator';
 import EvolutionCelebration from './components/ecosystem/EvolutionCelebration';
 import { Toaster } from "@/components/ui/toaster";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useSeasons } from './hooks/useSeasons';
 
 function App() {
   const {
@@ -31,6 +32,9 @@ function App() {
     adjustSimulationSpeed,
     togglePause
   } = useBiome();
+  
+  // Get current season information
+  const { currentSeason, seasonProgress } = useSeasons(simulationSpeed);
 
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null);
   const [selectedOrganism, setSelectedOrganism] = useState<Organism | null>(null);
@@ -128,7 +132,10 @@ function App() {
         <div className="flex-grow flex flex-col p-4 overflow-hidden">
           {/* Season Indicator */}
           <div className="mb-2">
-            <SeasonIndicator simulationSpeed={simulationSpeed} />
+            <SeasonIndicator 
+              currentSeason={currentSeason} 
+              seasonProgress={seasonProgress} 
+            />
           </div>
           
           {/* Biome Canvas */}
