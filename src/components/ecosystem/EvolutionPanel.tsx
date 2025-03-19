@@ -9,7 +9,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info, ChevronRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info, ChevronRight, Zap } from "lucide-react";
 
 interface EvolutionPanelProps {
   organisms: Organism[];
@@ -30,27 +36,45 @@ const EvolutionPanel = ({ organisms }: EvolutionPanelProps) => {
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-bold">Evolution Progress</h2>
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <button className="inline-flex items-center justify-center rounded-full w-6 h-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
-              <Info className="h-4 w-4" />
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80">
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold">About Evolution</h4>
-              <p className="text-sm">
-                Species accumulate adaptation points when under stress but surviving. 
-                When enough points are gathered, they evolve to the next stage with new traits.
-              </p>
-              <ul className="text-xs space-y-1 list-disc pl-4">
-                <li>Stage 1: Basic organism</li>
-                <li>Stage 2: Adapted organism with improved traits</li>
-                <li>Stage 3: Highly evolved organism with multiple beneficial traits</li>
-              </ul>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+        <div className="flex gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="inline-flex items-center justify-center rounded-full w-6 h-6 bg-blue-200 hover:bg-blue-300 dark:bg-blue-700 dark:hover:bg-blue-600">
+                  <Zap className="h-3 w-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="text-xs">
+                  Organisms gain adaptation points when under stress but surviving (health between 20-80%).
+                  This is shown as a blue glow around the organism.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button className="inline-flex items-center justify-center rounded-full w-6 h-6 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
+                <Info className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">About Evolution</h4>
+                <p className="text-sm">
+                  Species accumulate adaptation points when under stress but surviving. 
+                  When enough points are gathered, they evolve to the next stage with new traits.
+                </p>
+                <ul className="text-xs space-y-1 list-disc pl-4">
+                  <li>Stage 1: Basic organism</li>
+                  <li>Stage 2: Adapted organism with improved traits</li>
+                  <li>Stage 3: Highly evolved organism with multiple beneficial traits</li>
+                </ul>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
       </div>
 
       <ScrollArea className="flex-grow p-4 h-full overflow-auto">
