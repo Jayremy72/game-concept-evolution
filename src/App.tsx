@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useBiome } from '@/hooks/useBiome';
+import { useChallenges } from '@/hooks/useChallenges';
 import { Organism } from './types/ecosystem';
 import BiomeCanvas from './components/ecosystem/BiomeCanvas';
 import ControlPanel from './components/ecosystem/ControlPanel';
@@ -10,6 +11,7 @@ import OrganismInspector from './components/ecosystem/OrganismInspector';
 import EvolutionPanel from './components/ecosystem/EvolutionPanel';
 import SeasonIndicator from './components/ecosystem/SeasonIndicator';
 import EvolutionCelebration from './components/ecosystem/EvolutionCelebration';
+import ChallengesPanel from './components/ecosystem/ChallengesPanel';
 import { Toaster } from "@/components/ui/toaster";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,17 +32,28 @@ function App() {
     adjustWater,
     adjustSunlight,
     adjustSimulationSpeed,
-    togglePause
+    togglePause,
+    reproductionEvents
   } = useBiome();
   
   // Get current season information
   const { currentSeason, seasonProgress } = useSeasons(simulationSpeed);
+
+  // Get challenges system
+  const { 
+    challenges, 
+    activeChallenge, 
+    achievements, 
+    gameProgress,
+    visitedSeasons
+  } = useChallenges(organisms, biomeHealth, waterLevel, sunlightLevel, currentSeason);
 
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null);
   const [selectedOrganism, setSelectedOrganism] = useState<Organism | null>(null);
   const [showEvolutionPanel, setShowEvolutionPanel] = useState(false); // Default to hidden to avoid duplication
   const [showEvolutionCelebration, setShowEvolutionCelebration] = useState<Organism | null>(null);
   const [lastEvolvedStages, setLastEvolvedStages] = useState<Map<string, number>>(new Map());
+  const [showChallengesPanel, setShowChallengesPanel] = useState(false);
 
   // Track organism evolution
   React.useEffect(() => {
@@ -84,13 +97,24 @@ function App() {
       {/* App Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm p-3 flex justify-between items-center">
         <h1 className="text-xl font-bold">Ecosystem Architect</h1>
-        <div className="flex items-center gap-2">
-          <Checkbox 
-            id="toggleEvolution" 
-            checked={showEvolutionPanel}
-            onCheckedChange={(checked) => setShowEvolutionPanel(!!checked)} 
-          />
-          <Label htmlFor="toggleEvolution">Show Additional Evolution Panel</Label>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              id="toggleEvolution" 
+              checked={showEvolutionPanel}
+              onCheckedChange={(checked) => setShowEvolutionPanel(!!checked)} 
+            />
+            <Label htmlFor="toggleEvolution">Evolution Panel</Label>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Checkbox 
+              id="toggleChallenges" 
+              checked={showChallengesPanel}
+              onCheckedChange={(checked) => setShowChallengesPanel(!!checked)} 
+            />
+            <Label htmlFor="toggleChallenges">Challenges & Achievements</Label>
+          </div>
         </div>
       </header>
 
@@ -107,9 +131,9 @@ function App() {
             
             <TabsContent value="species" className="flex-grow overflow-auto p-0 m-0">
               <SpeciesPanel 
-                biomeType={biome} 
-                onSelectSpecies={handleSelectSpecies} 
-                selectedSpecies={selectedSpecies} 
+                biomeType={biome}
+                onSelectSpecies={handleSelectSpecies}
+                selectedSpecies={selectedSpecies}
               />
             </TabsContent>
             
@@ -128,7 +152,7 @@ function App() {
           </Tabs>
         </div>
         
-        {/* Center Area - Biome Canvas - Made larger by reducing padding */}
+        {/* Center Area - Biome Canvas */}
         <div className="flex-grow flex flex-col p-2 overflow-hidden">
           {/* Season Indicator */}
           <div className="mb-1">
@@ -138,7 +162,7 @@ function App() {
             />
           </div>
           
-          {/* Biome Canvas - Made taller */}
+          {/* Biome Canvas */}
           <div className="flex-grow">
             <BiomeCanvas 
               organisms={organisms}
@@ -149,10 +173,11 @@ function App() {
               onAddOrganism={handleAddOrganism}
               onSelectOrganism={handleSelectOrganism}
               isPaused={isPaused}
+              reproductionEvents={reproductionEvents}
             />
           </div>
           
-          {/* Control Panel - Made more compact */}
+          {/* Control Panel */}
           <div className="mt-1">
             <ControlPanel 
               waterLevel={waterLevel}
@@ -167,15 +192,30 @@ function App() {
           </div>
         </div>
 
-        {/* Conditional Right Panel - Evolution Panel - Made narrower */}
-        {showEvolutionPanel && (
-          <div className="w-full md:w-80 bg-white dark:bg-gray-800 shadow-sm overflow-auto">
-            <EvolutionPanel organisms={organisms} />
-          </div>
-        )}
+        {/* Right Panels */}
+        <div className="flex flex-col md:w-80">
+          {/* Evolution Panel */}
+          {showEvolutionPanel && (
+            <div className="flex-1 bg-white dark:bg-gray-800 shadow-sm overflow-auto border-l border-gray-200 dark:border-gray-700">
+              <EvolutionPanel organisms={organisms} />
+            </div>
+          )}
+          
+          {/* Challenges Panel */}
+          {showChallengesPanel && (
+            <div className="flex-1 bg-white dark:bg-gray-800 shadow-sm overflow-auto border-l border-gray-200 dark:border-gray-700">
+              <ChallengesPanel 
+                activeChallenge={activeChallenge}
+                challenges={challenges}
+                achievements={achievements}
+                gameProgress={gameProgress}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Organism Inspector Modal */}
+      {/* Modals */}
       {selectedOrganism && (
         <OrganismInspector 
           organism={selectedOrganism} 
@@ -185,7 +225,6 @@ function App() {
         />
       )}
       
-      {/* Evolution Celebration Modal */}
       {showEvolutionCelebration && (
         <EvolutionCelebration 
           organism={showEvolutionCelebration}
