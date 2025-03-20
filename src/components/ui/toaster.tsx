@@ -24,7 +24,7 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose className="opacity-100" /> {/* Make close button always visible */}
+            <ToastClose className="opacity-100 hover:opacity-100" /> {/* Always visible and hover effect */}
           </Toast>
         )
       })}

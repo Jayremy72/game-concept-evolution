@@ -287,7 +287,7 @@ const Game = () => {
               sunlightLevel={sunlightLevel}
               biomeType={biome}
               selectedSpecies={selectedSpecies}
-              onPlaceOrganism={handleAddOrganism}
+              onAddOrganism={handleAddOrganism}
               onSelectOrganism={handleSelectOrganism}
               isPaused={isPaused}
               reproductionEvents={reproductionEvents}

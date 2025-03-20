@@ -7,7 +7,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 5000 // Changed from 1000000 to 5000ms (5 seconds)
+const TOAST_REMOVE_DELAY = 5000 // 5 seconds
 
 type ToasterToast = ToastProps & {
   id: string
@@ -75,6 +75,12 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // When adding a toast, automatically set up the removal delay if duration is specified
+      if (action.toast.duration !== Infinity) {
+        const id = action.toast.id
+        addToRemoveQueue(id)
+      }
+      
       return {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
@@ -91,11 +97,11 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // If a specific toast is being dismissed
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
+        // If all toasts are being dismissed
         state.toasts.forEach((toast) => {
           addToRemoveQueue(toast.id)
         })
@@ -148,7 +154,11 @@ function toast({ ...props }: Toast) {
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
+    
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  // If no duration provided, default to 5 seconds
+  const duration = props.duration === undefined ? 5000 : props.duration
 
   dispatch({
     type: "ADD_TOAST",
@@ -156,8 +166,11 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      duration: duration,
       onOpenChange: (open) => {
         if (!open) dismiss()
+        // Also call the user-provided onOpenChange if it exists
+        props.onOpenChange?.(open)
       },
     },
   })
