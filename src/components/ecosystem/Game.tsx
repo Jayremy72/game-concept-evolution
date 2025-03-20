@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
@@ -77,7 +78,7 @@ const Game = () => {
     });
   };
 
-  const handleAddOrganism = (speciesId: string, position: { x: number, y: number }) => {
+  const handleAddOrganism = (type: string, position: { x: number, y: number }) => {
     if (selectedSpecies) {
       const success = addOrganism(selectedSpecies, position);
       if (success) {
@@ -100,11 +101,8 @@ const Game = () => {
     return false;
   };
 
-  const handleSelectOrganism = (id: string) => {
-    const organism = organisms.find(o => o.id === id);
-    if (organism) {
-      setInspectedOrganism(organism);
-    }
+  const handleSelectOrganism = (organism: Organism) => {
+    setInspectedOrganism(organism);
   };
 
   const handleRemoveOrganism = (id: string) => {
@@ -281,7 +279,7 @@ const Game = () => {
           </div>
           
           <div className="flex-grow border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <BiomeView 
+            <BiomeCanvas 
               organisms={organisms}
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
