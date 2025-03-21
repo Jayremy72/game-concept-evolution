@@ -67,7 +67,7 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
       key={species.id}
       variant={selectedSpecies === species.id ? "default" : "outline"}
       className={cn(
-        "flex items-center justify-start space-x-2 h-10 w-[calc(50%-0.5rem)]",
+        "flex items-center justify-start space-x-2 h-10",
         selectedSpecies === species.id && "ring-2 ring-primary"
       )}
       onClick={() => onSelectSpecies(species.id)}
@@ -83,9 +83,9 @@ const SpeciesPanel = ({ biomeType, onSelectSpecies, selectedSpecies }: SpeciesPa
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-bold">Add Species</h2>
           <TabsList className="grid grid-cols-3 w-auto">
-            <TabsTrigger value="producers" className="px-3">Producers</TabsTrigger>
-            <TabsTrigger value="consumers" className="px-3">Consumers</TabsTrigger>
-            <TabsTrigger value="decomposers" className="px-3">Decomposers</TabsTrigger>
+            <TabsTrigger value="producers">Producers</TabsTrigger>
+            <TabsTrigger value="consumers">Consumers</TabsTrigger>
+            <TabsTrigger value="decomposers">Decomposers</TabsTrigger>
           </TabsList>
         </div>
         

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
@@ -136,6 +135,7 @@ const Game = () => {
               biomeHealth={biomeHealth} 
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
+              className="flex-grow"
             />
             
             <SeasonIndicator 

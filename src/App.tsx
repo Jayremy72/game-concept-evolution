@@ -38,7 +38,7 @@ function App() {
 
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null);
   const [selectedOrganism, setSelectedOrganism] = useState<Organism | null>(null);
-  const [showEvolutionPanel, setShowEvolutionPanel] = useState(false); // Default to hidden to avoid duplication
+  const [showEvolutionPanel, setShowEvolutionPanel] = useState(true);
   const [showEvolutionCelebration, setShowEvolutionCelebration] = useState<Organism | null>(null);
   const [lastEvolvedStages, setLastEvolvedStages] = useState<Map<string, number>>(new Map());
 
@@ -90,16 +90,16 @@ function App() {
             checked={showEvolutionPanel}
             onCheckedChange={(checked) => setShowEvolutionPanel(!!checked)} 
           />
-          <Label htmlFor="toggleEvolution">Show Additional Evolution Panel</Label>
+          <Label htmlFor="toggleEvolution">Show Evolution Panel</Label>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col md:flex-row overflow-hidden">
         {/* Left Panel - Species Selection & Evolution */}
-        <div className="w-full md:w-96 bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col">
+        <div className="w-full md:w-80 bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col">
           <Tabs defaultValue="species" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="w-full">
               <TabsTrigger value="species">Species</TabsTrigger>
               <TabsTrigger value="evolution">Evolution</TabsTrigger>
               <TabsTrigger value="stats">Stats</TabsTrigger>
@@ -169,7 +169,7 @@ function App() {
 
         {/* Conditional Right Panel - Evolution Panel */}
         {showEvolutionPanel && (
-          <div className="w-full md:w-96 bg-white dark:bg-gray-800 shadow-sm overflow-auto">
+          <div className="w-full md:w-80 bg-white dark:bg-gray-800 shadow-sm overflow-auto">
             <EvolutionPanel organisms={organisms} />
           </div>
         )}

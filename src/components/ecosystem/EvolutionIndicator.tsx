@@ -4,6 +4,7 @@ import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useEcosystemStats } from "@/hooks/useEcosystemStats";
 
 interface EvolutionIndicatorProps {
   organism: Organism;
@@ -53,14 +54,12 @@ const EvolutionIndicator: React.FC<EvolutionIndicatorProps> = ({
   
   // Animation when close to evolving
   const isCloseToEvolving = !isMaxEvolution && progressPercent > 90;
-  const isGainingAdaptation = !isMaxEvolution && health > 20 && health < 80;
   
   return (
     <div 
       className={`
         relative p-1 rounded-md cursor-pointer 
         ${isCloseToEvolving ? 'animate-pulse bg-yellow-50 dark:bg-yellow-900/20' : ''}
-        ${isGainingAdaptation ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
         ${health < 30 ? 'bg-red-50 dark:bg-red-900/20' : ''}
         hover:bg-gray-100 dark:hover:bg-gray-800
       `}
@@ -70,9 +69,6 @@ const EvolutionIndicator: React.FC<EvolutionIndicatorProps> = ({
       
       <div className="text-center mb-1">
         <span className="text-xl">{currentEvolution.icon}</span>
-        {isGainingAdaptation && (
-          <span className="absolute -top-1 -right-1 text-xs text-blue-600 dark:text-blue-400">+</span>
-        )}
       </div>
       
       {!isMaxEvolution ? (
@@ -80,12 +76,11 @@ const EvolutionIndicator: React.FC<EvolutionIndicatorProps> = ({
           <Progress 
             value={progressPercent} 
             className="h-1" 
+            indicatorClassName={`
+              ${progressPercent > 90 ? 'bg-yellow-500 animate-pulse' : 
+                progressPercent > 50 ? 'bg-green-500' : 'bg-blue-500'}
+            `}
           />
-          {isGainingAdaptation && (
-            <div className="text-[8px] text-center text-blue-600 dark:text-blue-400 mt-0.5">
-              {Math.round(adaptationPoints)}/{nextEvolution.threshold}
-            </div>
-          )}
         </div>
       ) : (
         <div className="w-10 h-1 mx-auto bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
