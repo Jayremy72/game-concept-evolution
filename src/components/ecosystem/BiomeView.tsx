@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Cloud, Droplets, Sun } from "lucide-react";
@@ -6,6 +5,7 @@ import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Season } from "@/hooks/useSeasons";
 import { useToast } from "@/hooks/use-toast";
+import { ReproductionEvent } from "@/utils/reproductionSystem";
 
 interface BiomeViewProps {
   biomeType: string;
@@ -16,6 +16,8 @@ interface BiomeViewProps {
   waterLevel: number;
   sunlightLevel: number;
   currentSeason?: Season;
+  isPaused?: boolean;
+  reproductionEvents?: ReproductionEvent[];
 }
 
 const BiomeView = ({
@@ -26,7 +28,9 @@ const BiomeView = ({
   onOrganismClick,
   waterLevel,
   sunlightLevel,
-  currentSeason = "spring"
+  currentSeason = "spring",
+  isPaused = false,
+  reproductionEvents = []
 }: BiomeViewProps) => {
   const { toast } = useToast();
   const [populationInfo, setPopulationInfo] = useState({
@@ -36,7 +40,6 @@ const BiomeView = ({
     decomposers: 0
   });
   
-  // Update population info
   useEffect(() => {
     const producers = organisms.filter(org => 
       ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(org.type)
@@ -58,9 +61,7 @@ const BiomeView = ({
     });
   }, [organisms]);
   
-  // Define biome background based on type and season
   const getBiomeBackground = () => {
-    // Base biome colors
     let biomeBaseClass = "";
     switch (biomeType) {
       case "forest":
@@ -73,10 +74,9 @@ const BiomeView = ({
         biomeBaseClass = "from-blue-300 to-blue-600";
         break;
       default:
-        biomeBaseClass = "from-green-300 to-green-600"; // Default to forest
+        biomeBaseClass = "from-green-300 to-green-600";
     }
     
-    // Apply seasonal modifications
     if (biomeType === "forest") {
       switch (currentSeason) {
         case "spring":
@@ -102,7 +102,6 @@ const BiomeView = ({
     }
   };
 
-  // Get seasonal overlay
   const getSeasonalOverlay = () => {
     switch (currentSeason) {
       case "winter":
@@ -152,7 +151,6 @@ const BiomeView = ({
   };
 
   const getOrganismStyles = (type: string, stage: number) => {
-    // Base styles based on type
     let baseStyle = "";
     switch (type) {
       case "tree":
@@ -177,14 +175,12 @@ const BiomeView = ({
         baseStyle = "text-gray-800";
     }
     
-    // Size based on evolution stage
     const sizeClass = stage === 0 ? "text-xl" : stage === 1 ? "text-2xl" : "text-3xl";
     
-    // Special seasonal styles
     if (currentSeason === "winter" && (type === "tree" || type === "grass")) {
-      baseStyle = "text-gray-600"; // Winter dormancy for plants
+      baseStyle = "text-gray-600";
     } else if (currentSeason === "autumn" && type === "tree") {
-      baseStyle = "text-orange-700"; // Fall colors for trees
+      baseStyle = "text-orange-700";
     }
     
     return `${baseStyle} ${sizeClass}`;
@@ -211,10 +207,8 @@ const BiomeView = ({
         )}
         onClick={handleAreaClick}
       >
-        {/* Seasonal overlay effects */}
         {getSeasonalOverlay()}
         
-        {/* Dynamic environment indicators */}
         <div className="absolute top-4 right-4 flex space-x-2">
           <div className="bg-white/30 backdrop-blur-sm p-2 rounded-full">
             <Sun className={cn("h-6 w-6", sunlightLevel > 50 ? "text-yellow-400" : "text-yellow-200")} />
@@ -227,7 +221,6 @@ const BiomeView = ({
           </div>
         </div>
 
-        {/* Population info */}
         <div className="absolute top-4 left-4 bg-white/30 backdrop-blur-sm p-2 rounded-md text-sm">
           <div className="flex items-center space-x-2">
             <span className="font-medium">Population:</span>
@@ -241,7 +234,6 @@ const BiomeView = ({
           </div>
         )}
 
-        {/* Render organisms */}
         {organisms.map((org) => {
           const evolutionInfo = getEvolutionInfo(org.type, org.stage);
           return (
@@ -268,7 +260,6 @@ const BiomeView = ({
           );
         })}
 
-        {/* Ground layer for forest biome */}
         {biomeType === "forest" && (
           <div className={`absolute bottom-0 w-full h-1/6 ${
             currentSeason === "winter" ? "bg-gradient-to-t from-gray-100 to-gray-300" : 
@@ -277,12 +268,10 @@ const BiomeView = ({
           }`}></div>
         )}
         
-        {/* Sand for desert biome */}
         {biomeType === "desert" && (
           <div className="absolute bottom-0 w-full h-1/4 bg-gradient-to-t from-yellow-700 to-yellow-500"></div>
         )}
         
-        {/* Water bottom for ocean biome */}
         {biomeType === "ocean" && (
           <div className="absolute bottom-0 w-full h-full bg-gradient-to-t from-blue-900 to-blue-400 opacity-80"></div>
         )}

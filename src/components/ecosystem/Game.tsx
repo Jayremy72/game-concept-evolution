@@ -115,6 +115,27 @@ const Game = () => {
     });
   };
 
+  const handleBiomeClick = (x: number, y: number) => {
+    if (selectedSpecies) {
+      const success = addOrganism(selectedSpecies, { x, y });
+      if (success) {
+        toast({
+          title: "Organism Added",
+          description: `Added ${selectedSpecies} to your ecosystem.`,
+          duration: 2000,
+        });
+        setSelectedSpecies(null);
+      } else {
+        toast({
+          title: "Cannot Add Organism",
+          description: "This area is already occupied or unsuitable.",
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    }
+  };
+
   const toggleEvolutionPanel = () => {
     setIsEvolutionPanelCollapsed(!isEvolutionPanelCollapsed);
   };
@@ -125,11 +146,8 @@ const Game = () => {
 
   return (
     <div className="flex h-full gap-4">
-      {/* Main content and evolution panel */}
       <div className="flex-grow flex gap-4">
-        {/* Left side: Biome view and controls */}
         <div className="flex-grow flex flex-col h-full">
-          {/* Stats Panel (above) */}
           <div className="flex gap-4">
             <StatsPanel 
               organisms={organisms}
@@ -145,7 +163,6 @@ const Game = () => {
             />
           </div>
           
-          {/* Simulation Speed Controls */}
           <div className="flex items-center gap-2 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             <Button 
               variant="outline" 
@@ -282,7 +299,6 @@ const Game = () => {
             </div>
           </div>
           
-          {/* Ecosystem Window (middle) */}
           <div className="flex-grow my-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <BiomeView 
               organisms={organisms}
@@ -290,14 +306,14 @@ const Game = () => {
               sunlightLevel={sunlightLevel}
               biomeType={biome}
               selectedSpecies={selectedSpecies}
-              onAddOrganism={handleAddOrganism}
-              onSelectOrganism={handleSelectOrganism}
+              onBiomeClick={handleBiomeClick}
+              onOrganismClick={handleSelectOrganism}
               isPaused={isPaused}
               reproductionEvents={reproductionEvents}
+              currentSeason={currentSeason}
             />
           </div>
           
-          {/* Species Panel (below) */}
           <div className="h-40 min-h-40 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <SpeciesPanel 
               biomeType={biome} 
@@ -307,7 +323,6 @@ const Game = () => {
           </div>
         </div>
         
-        {/* Right side: Evolution Panel with collapse toggle */}
         <div className="relative">
           <Button 
             variant="outline" 
@@ -328,7 +343,6 @@ const Game = () => {
         </div>
       </div>
       
-      {/* Stats Dashboard Modal */}
       {showStatsDashboard && (
         <StatsDashboard 
           stats={stats} 
@@ -337,7 +351,6 @@ const Game = () => {
         />
       )}
       
-      {/* Organism Inspector */}
       {inspectedOrganism && (
         <OrganismInspector 
           organism={inspectedOrganism} 
