@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Organism, OrganismMovement, FeedingEvent, OrganismInteraction } from "@/types/ecosystem";
+import { Organism } from "@/types/ecosystem";
 import { v4 as uuidv4 } from "uuid";
 import { 
   getNextEvolutionStage, 
@@ -29,13 +29,8 @@ export function useBiome() {
   const [simulationSpeed, setSimulationSpeed] = useState<number>(5);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [reproductionEvents, setReproductionEvents] = useState<ReproductionEvent[]>([]);
-  const [movementEvents, setMovementEvents] = useState<OrganismMovement[]>([]);
-  const [feedingEvents, setFeedingEvents] = useState<FeedingEvent[]>([]);
-  const [organismInteractions, setOrganismInteractions] = useState<OrganismInteraction[]>([]);
   
   const reproductionCooldowns = useRef<Map<string, number>>(new Map());
-  const movementCooldowns = useRef<Map<string, number>>(new Map());
-  const feedingCooldowns = useRef<Map<string, number>>(new Map());
   
   const { 
     currentSeason, 
@@ -50,16 +45,10 @@ export function useBiome() {
       setReproductionEvents(prev => 
         prev.filter(event => now - event.timestamp < 3000)
       );
-      setFeedingEvents(prev =>
-        prev.filter(event => now - event.timestamp < 2000)
-      );
-      setOrganismInteractions(prev =>
-        prev.filter(event => now - event.timestamp < 5000)
-      );
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [reproductionEvents, feedingEvents, organismInteractions]);
+  }, [reproductionEvents]);
   
   useEffect(() => {
     if (isPaused) return;
@@ -69,53 +58,10 @@ export function useBiome() {
     const intervalId = setInterval(() => {
       const seasonalWaterLevel = Math.max(0, Math.min(100, waterLevel + seasonData.waterModifier));
       const seasonalSunlightLevel = Math.max(0, Math.min(100, sunlightLevel + seasonData.sunlightModifier));
-      const now = Date.now();
-      
-      const updatedMovementEvents: OrganismMovement[] = [];
-      const newFeedingEvents: FeedingEvent[] = [];
-      const newInteractions: OrganismInteraction[] = [];
       
       const updatedOrganisms = organisms.map(org => {
         let healthChange = 0;
         let adaptationGain = 0;
-        let newPosition = { ...org.position };
-        let newTargetPosition = org.targetPosition;
-        let isHunting = false;
-        
-        const isAnimal = ["rabbit", "lizard", "fish", "fox", "snake", "crab"].includes(org.type);
-        const hunger = (org.hunger || 0) + (isAnimal ? 1 : 0);
-        
-        if (isAnimal && (!movementCooldowns.current.get(org.id) || now - (movementCooldowns.current.get(org.id) || 0) > 5000 / simulationSpeed)) {
-          if (!newTargetPosition || Math.random() < 0.2) {
-            newTargetPosition = {
-              x: Math.max(5, Math.min(95, org.position.x + (Math.random() * 30 - 15))),
-              y: Math.max(5, Math.min(95, org.position.y + (Math.random() * 30 - 15)))
-            };
-            
-            if (["fox", "snake", "crab"].includes(org.type) && hunger > 40) {
-              const prey = organisms.find(o => 
-                (org.type === "fox" && ["rabbit"].includes(o.type)) ||
-                (org.type === "snake" && ["lizard"].includes(o.type)) ||
-                (org.type === "crab" && ["fish"].includes(o.type))
-              );
-              
-              if (prey) {
-                newTargetPosition = { ...prey.position };
-                isHunting = true;
-              }
-            }
-            
-            updatedMovementEvents.push({
-              organismId: org.id,
-              startPosition: org.position,
-              targetPosition: newTargetPosition,
-              startTime: now,
-              duration: 5000 / simulationSpeed
-            });
-            
-            movementCooldowns.current.set(org.id, now);
-          }
-        }
         
         switch (org.type) {
           case "tree":
@@ -140,49 +86,8 @@ export function useBiome() {
             const hasFood = organisms.some(o => 
               ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(o.type)
             );
-            
-            if (hasFood) {
-              if (hunger > 50 && Math.random() < 0.3) {
-                const foodSource = organisms.find(o => 
-                  ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(o.type)
-                );
-                
-                if (foodSource) {
-                  const distance = Math.sqrt(
-                    Math.pow(org.position.x - foodSource.position.x, 2) + 
-                    Math.pow(org.position.y - foodSource.position.y, 2)
-                  );
-                  
-                  if (distance < 15) {
-                    healthChange += 5;
-                    
-                    newFeedingEvents.push({
-                      predatorId: org.id,
-                      preyId: foodSource.id,
-                      position: org.position,
-                      timestamp: now
-                    });
-                    
-                    newInteractions.push({
-                      type: 'feeding',
-                      organisms: [org.id, foodSource.id],
-                      position: org.position,
-                      timestamp: now,
-                      result: 'success'
-                    });
-                    
-                    movementCooldowns.current.set(org.id, now + 3000);
-                    feedingCooldowns.current.set(org.id, now);
-                  } else {
-                    newTargetPosition = foodSource.position;
-                  }
-                }
-              } else {
-                healthChange += 1;
-              }
-            } else {
-              healthChange -= 3;
-            }
+            if (hasFood) healthChange += 1;
+            else healthChange -= 3;
             
             if (seasonalWaterLevel < 20) healthChange -= 2;
             
@@ -193,53 +98,10 @@ export function useBiome() {
           case "snake":
           case "crab":
             const hasPrey = organisms.some(o => 
-              (org.type === "fox" && ["rabbit"].includes(o.type)) ||
-              (org.type === "snake" && ["lizard"].includes(o.type)) ||
-              (org.type === "crab" && ["fish"].includes(o.type))
+              ["rabbit", "lizard", "fish"].includes(o.type)
             );
-            
-            if (hasPrey && hunger > 60) {
-              const prey = organisms.find(o => 
-                (org.type === "fox" && ["rabbit"].includes(o.type)) ||
-                (org.type === "snake" && ["lizard"].includes(o.type)) ||
-                (org.type === "crab" && ["fish"].includes(o.type))
-              );
-              
-              if (prey) {
-                const distance = Math.sqrt(
-                  Math.pow(org.position.x - prey.position.x, 2) + 
-                  Math.pow(org.position.y - prey.position.y, 2)
-                );
-                
-                if (distance < 10 && Math.random() < 0.5) {
-                  healthChange += 10;
-                  
-                  newFeedingEvents.push({
-                    predatorId: org.id,
-                    preyId: prey.id,
-                    position: org.position,
-                    timestamp: now
-                  });
-                  
-                  newInteractions.push({
-                    type: 'feeding',
-                    organisms: [org.id, prey.id],
-                    position: org.position,
-                    timestamp: now,
-                    result: 'predator success'
-                  });
-                  
-                  movementCooldowns.current.set(org.id, now + 5000);
-                  feedingCooldowns.current.set(org.id, now);
-                } else {
-                  newTargetPosition = prey.position;
-                }
-              }
-            } else if (hasPrey) {
-              healthChange += 1;
-            } else {
-              healthChange -= 2;
-            }
+            if (hasPrey) healthChange += 1;
+            else healthChange -= 2;
             
             if (currentSeason === "winter") healthChange -= 0.5;
             break;
@@ -299,17 +161,13 @@ export function useBiome() {
           health: Math.max(0, Math.min(100, org.health + healthChange)),
           adaptationPoints: newAdaptationPoints,
           stage: nextStage,
-          traits: newTraits,
-          position: newPosition,
-          targetPosition: newTargetPosition,
-          hunger: Math.max(0, Math.min(100, hunger)),
-          lastMealTime: isHunting ? org.lastMealTime : now,
-          age: ((org.age || 0) + intervalDuration / 1000)
+          traits: newTraits
         };
       });
       
       const livingOrganisms = updatedOrganisms.filter(org => org.health > 0);
       
+      const now = Date.now();
       const newOffspring: Organism[] = [];
       const newReproductionEvents: ReproductionEvent[] = [];
       
@@ -326,8 +184,6 @@ export function useBiome() {
         
         const maxPopulation = getMaxPopulation(organism.type);
         if ((typeCount[organism.type] || 0) >= maxPopulation) return;
-        
-        if (organism.health < 70) return;
         
         const mates = findPotentialMates(organism, livingOrganisms);
         
@@ -376,18 +232,6 @@ export function useBiome() {
         setReproductionEvents(prev => [...prev, ...newReproductionEvents]);
       }
       
-      if (updatedMovementEvents.length > 0) {
-        setMovementEvents(prev => [...prev.filter(e => now - e.startTime < e.duration), ...updatedMovementEvents]);
-      }
-      
-      if (newFeedingEvents.length > 0) {
-        setFeedingEvents(prev => [...prev, ...newFeedingEvents]);
-      }
-      
-      if (newInteractions.length > 0) {
-        setOrganismInteractions(prev => [...prev, ...newInteractions]);
-      }
-      
       const totalHealth = livingOrganisms.reduce((sum, org) => sum + org.health, 0);
       const averageHealth = livingOrganisms.length > 0 ? totalHealth / livingOrganisms.length : 0;
       
@@ -416,6 +260,7 @@ export function useBiome() {
         averageHealth * 0.4 + balanceScore * 0.6
       ));
       
+      setOrganisms(livingOrganisms);
       setBiomeHealth(newBiomeHealth);
     }, intervalDuration);
     
@@ -513,15 +358,6 @@ export function useBiome() {
     
     const evolutionInfo = getEvolutionInfo(type, 0);
     
-    let movementSpeed = 0;
-    if (["rabbit", "lizard", "fish", "fox", "snake", "crab"].includes(type)) {
-      movementSpeed = 5 + Math.random() * 5;
-      
-      if (["rabbit", "fox"].includes(type)) {
-        movementSpeed += 3;
-      }
-    }
-    
     const newOrganism: Organism = {
       id: uuidv4(),
       type,
@@ -529,11 +365,7 @@ export function useBiome() {
       health: 100,
       adaptationPoints: 0,
       stage: 0,
-      traits: evolutionInfo.traits,
-      birthTime: Date.now(),
-      movementSpeed,
-      hunger: 0,
-      age: 0
+      traits: evolutionInfo.traits
     };
     
     setOrganisms(prev => [...prev, newOrganism]);
@@ -569,9 +401,6 @@ export function useBiome() {
     simulationSpeed,
     isPaused,
     reproductionEvents,
-    movementEvents,
-    feedingEvents,
-    organismInteractions,
     addOrganism,
     removeOrganism,
     adjustWater,
