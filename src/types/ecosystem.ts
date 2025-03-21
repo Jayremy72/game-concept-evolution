@@ -10,7 +10,6 @@ export interface Organism {
   adaptationPoints: number;
   stage: number;
   traits: string[];
-  birthTime?: number; // When was this organism created
 }
 
 export interface EvolutionStage {
