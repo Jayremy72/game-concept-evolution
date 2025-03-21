@@ -6,7 +6,7 @@ import EvolutionPanel from "./EvolutionPanel";
 import SeasonIndicator from "./SeasonIndicator";
 import StatsDashboard from "./StatsDashboard";
 import OrganismInspector from "./OrganismInspector";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useBiome } from "@/hooks/useBiome";
 import { useSeasons } from "@/hooks/useSeasons";
 import { useEcosystemStats } from "@/hooks/useEcosystemStats";
@@ -77,9 +77,9 @@ const Game = () => {
     });
   };
 
-  const handleAddOrganism = (speciesId: string, position: { x: number, y: number }) => {
+  const handleAddOrganism = (speciesId: string, x: number, y: number) => {
     if (selectedSpecies) {
-      const success = addOrganism(selectedSpecies, position);
+      const success = addOrganism(selectedSpecies, { x, y });
       if (success) {
         toast({
           title: "Organism Added",
@@ -95,9 +95,7 @@ const Game = () => {
           duration: 2000,
         });
       }
-      return success;
     }
-    return false;
   };
 
   const handleSelectOrganism = (id: string) => {
@@ -126,10 +124,13 @@ const Game = () => {
   };
 
   return (
-    <div className="flex h-full gap-2">
-      <div className="flex-grow flex gap-2">
+    <div className="flex h-full gap-4">
+      {/* Main content and evolution panel */}
+      <div className="flex-grow flex gap-4">
+        {/* Left side: Biome view and controls */}
         <div className="flex-grow flex flex-col h-full">
-          <div className="flex gap-2 mb-1">
+          {/* Stats Panel (above) */}
+          <div className="flex gap-4">
             <StatsPanel 
               organisms={organisms}
               biomeHealth={biomeHealth} 
@@ -144,7 +145,8 @@ const Game = () => {
             />
           </div>
           
-          <div className="flex items-center gap-2 mb-1 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          {/* Simulation Speed Controls */}
+          <div className="flex items-center gap-2 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             <Button 
               variant="outline" 
               size="icon" 
@@ -280,21 +282,23 @@ const Game = () => {
             </div>
           </div>
           
-          <div className="flex-grow border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          {/* Ecosystem Window (middle) */}
+          <div className="flex-grow my-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <BiomeView 
               organisms={organisms}
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
               biomeType={biome}
               selectedSpecies={selectedSpecies}
-              onPlaceOrganism={handleAddOrganism}
+              onAddOrganism={handleAddOrganism}
               onSelectOrganism={handleSelectOrganism}
               isPaused={isPaused}
               reproductionEvents={reproductionEvents}
             />
           </div>
           
-          <div className="h-32 min-h-32 mt-1 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          {/* Species Panel (below) */}
+          <div className="h-40 min-h-40 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <SpeciesPanel 
               biomeType={biome} 
               onSelectSpecies={handleSpeciesSelect} 
@@ -303,6 +307,7 @@ const Game = () => {
           </div>
         </div>
         
+        {/* Right side: Evolution Panel with collapse toggle */}
         <div className="relative">
           <Button 
             variant="outline" 
@@ -317,12 +322,13 @@ const Game = () => {
             }
           </Button>
           
-          <div className={`transition-all duration-300 ${isEvolutionPanelCollapsed ? 'w-0 opacity-0' : 'w-[250px] opacity-100'} h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden`}>
+          <div className={`transition-all duration-300 ${isEvolutionPanelCollapsed ? 'w-0 opacity-0' : 'w-[300px] opacity-100'} h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden`}>
             {!isEvolutionPanelCollapsed && <EvolutionPanel organisms={organisms} />}
           </div>
         </div>
       </div>
       
+      {/* Stats Dashboard Modal */}
       {showStatsDashboard && (
         <StatsDashboard 
           stats={stats} 
@@ -331,6 +337,7 @@ const Game = () => {
         />
       )}
       
+      {/* Organism Inspector */}
       {inspectedOrganism && (
         <OrganismInspector 
           organism={inspectedOrganism} 
