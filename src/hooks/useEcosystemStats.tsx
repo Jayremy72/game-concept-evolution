@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Organism } from "@/types/ecosystem";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface StatPoint {
   timestamp: number;
@@ -87,11 +87,10 @@ export function useEcosystemStats(
           [orgKey]: now
         }));
         
-        // Show toast notification with our custom toast
-        toast({
-          title: `Evolution: ${org.type} reached stage ${org.stage + 1}!`,
+        // Show toast notification
+        toast(`Evolution: ${org.type} reached stage ${org.stage + 1}!`, {
           description: `A ${org.type} has evolved to the next stage with new traits.`,
-          duration: 5000,
+          icon: "🧬"
         });
       }
     });
