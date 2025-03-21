@@ -137,6 +137,10 @@ export function useBiome() {
           case "rabbit":
           case "lizard":
           case "fish":
+            const hasFood = organisms.some(o => 
+              ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(o.type)
+            );
+            
             if (hasFood) {
               if (hunger > 50 && Math.random() < 0.3) {
                 const foodSource = organisms.find(o => 
@@ -188,6 +192,12 @@ export function useBiome() {
           case "fox":
           case "snake":
           case "crab":
+            const hasPrey = organisms.some(o => 
+              (org.type === "fox" && ["rabbit"].includes(o.type)) ||
+              (org.type === "snake" && ["lizard"].includes(o.type)) ||
+              (org.type === "crab" && ["fish"].includes(o.type))
+            );
+            
             if (hasPrey && hunger > 60) {
               const prey = organisms.find(o => 
                 (org.type === "fox" && ["rabbit"].includes(o.type)) ||

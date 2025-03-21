@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import BiomeCanvas from "./BiomeCanvas";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
 import StatsPanel from "./StatsPanel";
