@@ -5,6 +5,7 @@ import { Cloud, Droplets, Sun } from "lucide-react";
 import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Season } from "@/hooks/useSeasons";
+import EvolutionIndicator from "./EvolutionIndicator";
 
 interface BiomeViewProps {
   biomeType: string;
@@ -120,50 +121,6 @@ const BiomeView = ({
     }
   };
 
-  const getOrganismStyles = (type: string, stage: number) => {
-    // Base styles based on type
-    let baseStyle = "";
-    switch (type) {
-      case "tree":
-        baseStyle = "text-green-800";
-        break;
-      case "grass":
-        baseStyle = "text-green-500";
-        break;
-      case "flower":
-        baseStyle = "text-pink-500";
-        break;
-      case "rabbit":
-        baseStyle = "text-gray-400";
-        break;
-      case "fox":
-        baseStyle = "text-orange-500";
-        break;
-      case "fungi":
-        baseStyle = "text-purple-400";
-        break;
-      default:
-        baseStyle = "text-gray-800";
-    }
-    
-    // Size based on evolution stage
-    const sizeClass = stage === 0 ? "text-xl" : stage === 1 ? "text-2xl" : "text-3xl";
-    
-    // Special seasonal styles
-    if (currentSeason === "winter" && (type === "tree" || type === "grass")) {
-      baseStyle = "text-gray-600"; // Winter dormancy for plants
-    } else if (currentSeason === "autumn" && type === "tree") {
-      baseStyle = "text-orange-700"; // Fall colors for trees
-    }
-    
-    return `${baseStyle} ${sizeClass}`;
-  };
-
-  const getOrganismIcon = (type: string, stage: number) => {
-    const evolutionInfo = getEvolutionInfo(type, stage);
-    return evolutionInfo.icon;
-  };
-
   const handleAreaClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -203,31 +160,25 @@ const BiomeView = ({
         )}
 
         {/* Render organisms */}
-        {organisms.map((org) => {
-          const evolutionInfo = getEvolutionInfo(org.type, org.stage);
-          return (
-            <div
-              key={org.id}
-              className={cn(
-                "absolute transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer",
-                getOrganismStyles(org.type, org.stage)
-              )}
-              style={{ left: `${org.position.x}%`, top: `${org.position.y}%` }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOrganismClick(org.id);
-              }}
-              title={`${evolutionInfo.name} (Health: ${org.health}, Adaptation: ${org.adaptationPoints})`}
-            >
-              {getOrganismIcon(org.type, org.stage)}
-              {org.adaptationPoints > 0 && (
-                <div className="absolute -top-3 -right-3 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {Math.min(org.stage + 1, 2)}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {organisms.map((org) => (
+          <div
+            key={org.id}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500"
+            style={{ 
+              left: `${org.position.x}%`, 
+              top: `${org.position.y}%`,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOrganismClick(org.id);
+            }}
+          >
+            <EvolutionIndicator 
+              organism={org}
+              onClick={() => onOrganismClick(org.id)}
+            />
+          </div>
+        ))}
 
         {/* Ground layer for forest biome */}
         {biomeType === "forest" && (

@@ -4,7 +4,6 @@ import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { useEcosystemStats } from "@/hooks/useEcosystemStats";
 
 interface EvolutionIndicatorProps {
   organism: Organism;
@@ -15,7 +14,7 @@ const EvolutionIndicator: React.FC<EvolutionIndicatorProps> = ({
   organism,
   onClick
 }) => {
-  const { id, type, stage, health, adaptationPoints } = organism;
+  const { type, stage, health, adaptationPoints } = organism;
   const currentEvolution = getEvolutionInfo(type, stage);
   const nextEvolution = getEvolutionInfo(type, stage + 1);
   const isMaxEvolution = stage >= 2; // Assuming max stage is 2
