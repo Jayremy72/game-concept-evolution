@@ -4,6 +4,7 @@ import { Organism } from "@/types/ecosystem";
 import EvolutionIndicator from "./EvolutionIndicator";
 import { useEcosystemStats } from "@/hooks/useEcosystemStats";
 import { toast } from "sonner";
+import { ReproductionEvent } from "@/utils/reproductionSystem";
 
 interface BiomeCanvasProps {
   organisms: Organism[];
@@ -11,6 +12,7 @@ interface BiomeCanvasProps {
   sunlightLevel: number;
   biomeType: string;
   selectedSpecies: string | null;
+  reproductionEvents?: ReproductionEvent[];
   onAddOrganism: (type: string, position: { x: number; y: number }) => boolean;
   onSelectOrganism: (organism: Organism) => void;
   isPaused: boolean;
@@ -22,6 +24,7 @@ const BiomeCanvas: React.FC<BiomeCanvasProps> = ({
   sunlightLevel,
   biomeType,
   selectedSpecies,
+  reproductionEvents = [],
   onAddOrganism,
   onSelectOrganism,
   isPaused
@@ -150,15 +153,36 @@ const BiomeCanvas: React.FC<BiomeCanvasProps> = ({
         </div>
       )}
       
+      {/* Reproduction events visualization */}
+      {reproductionEvents.map((event) => (
+        <div
+          key={event.id}
+          className="absolute z-30 pointer-events-none"
+          style={{
+            left: `${event.position.x}%`,
+            top: `${event.position.y}%`,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-green-400 opacity-75"></div>
+          <div className="relative inline-flex rounded-full h-6 w-6 bg-green-500 text-white items-center justify-center text-xs">
+            <span className="animate-pulse">♥</span>
+          </div>
+        </div>
+      ))}
+      
       {/* Render organisms */}
       {organisms.map((organism) => {
         const isHighlighted = highlightedEvolutions.includes(organism.id);
+        const isNewborn = organism.birthTime && Date.now() - organism.birthTime < 5000;
         
         return (
           <div
             key={organism.id}
             className={`absolute transition-all duration-300 z-10 ${
               isHighlighted ? 'animate-bounce z-20' : ''
+            } ${
+              isNewborn ? 'scale-75 animate-pulse' : ''
             }`}
             style={{
               left: `${organism.position.x}%`,
@@ -177,6 +201,11 @@ const BiomeCanvas: React.FC<BiomeCanvasProps> = ({
           </div>
         );
       })}
+      
+      {/* Organism Count */}
+      <div className="absolute top-2 left-2 bg-white/80 dark:bg-gray-800/80 rounded-md p-1 text-xs">
+        <div>Population: {organisms.length}</div>
+      </div>
       
       {/* Evolution metrics overlay */}
       {organisms.length > 0 && (

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Organism } from "@/types/ecosystem";
 import { v4 as uuidv4 } from "uuid";
 import { 
@@ -7,7 +6,14 @@ import {
   getEvolutionInfo, 
   calculateAdaptationGain 
 } from "@/utils/evolutionSystem";
+import {
+  findPotentialMates,
+  createOffspring,
+  calculateReproductionChance,
+  ReproductionEvent
+} from "@/utils/reproductionSystem";
 import { useSeasons } from "@/hooks/useSeasons";
+import { toast } from "sonner";
 
 interface OrganismPosition {
   x: number;
@@ -22,30 +28,41 @@ export function useBiome() {
   const [sunlightLevel, setSunlightLevel] = useState<number>(60);
   const [simulationSpeed, setSimulationSpeed] = useState<number>(5);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [reproductionEvents, setReproductionEvents] = useState<ReproductionEvent[]>([]);
   
-  // Initialize seasons
+  const reproductionCooldowns = useRef<Map<string, number>>(new Map());
+  
   const { 
     currentSeason, 
     seasonData 
   } = useSeasons(simulationSpeed);
   
-  // Create interactions between species, environment, and seasons
+  useEffect(() => {
+    if (reproductionEvents.length === 0) return;
+    
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setReproductionEvents(prev => 
+        prev.filter(event => now - event.timestamp < 3000)
+      );
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [reproductionEvents]);
+  
   useEffect(() => {
     if (isPaused) return;
     
     const intervalDuration = 2000 / simulationSpeed;
     
     const intervalId = setInterval(() => {
-      // Apply seasonal effects to environment
       const seasonalWaterLevel = Math.max(0, Math.min(100, waterLevel + seasonData.waterModifier));
       const seasonalSunlightLevel = Math.max(0, Math.min(100, sunlightLevel + seasonData.sunlightModifier));
       
-      // Update organism health based on environmental factors
       const updatedOrganisms = organisms.map(org => {
         let healthChange = 0;
         let adaptationGain = 0;
         
-        // Apply environmental effects
         switch (org.type) {
           case "tree":
           case "grass":
@@ -54,21 +71,18 @@ export function useBiome() {
           case "bush":
           case "seaweed":
           case "coral":
-            // Producers need sunlight and water
             if (seasonalSunlightLevel > 70) healthChange += 2;
             else if (seasonalSunlightLevel < 30) healthChange -= 2;
             
             if (seasonalWaterLevel > 60) healthChange += 2;
             else if (seasonalWaterLevel < 30) healthChange -= 3;
             
-            // Apply seasonal growth modifier
             healthChange *= seasonData.growthModifier;
             break;
             
           case "rabbit":
           case "lizard":
           case "fish":
-            // Herbivores need producers and moderate conditions
             const hasFood = organisms.some(o => 
               ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(o.type)
             );
@@ -77,63 +91,54 @@ export function useBiome() {
             
             if (seasonalWaterLevel < 20) healthChange -= 2;
             
-            // Animals struggle more in winter
             if (currentSeason === "winter") healthChange -= 1;
             break;
             
           case "fox":
           case "snake":
           case "crab":
-            // Predators need prey
             const hasPrey = organisms.some(o => 
               ["rabbit", "lizard", "fish"].includes(o.type)
             );
             if (hasPrey) healthChange += 1;
             else healthChange -= 2;
             
-            // Animals struggle more in winter
             if (currentSeason === "winter") healthChange -= 0.5;
             break;
             
           case "fungi":
           case "beetle":
           case "starfish":
-            // Decomposers thrive in many conditions
             const hasDeadMatter = organisms.some(o => o.health < 30);
             if (hasDeadMatter) healthChange += 2;
             
             if (seasonalWaterLevel > 40) healthChange += 1;
             
-            // Decomposers do better in autumn
             if (currentSeason === "autumn") healthChange += 1;
             break;
         }
-
-        // Apply traits effects
+        
         if (org.traits.includes("drought-resistant") && seasonalWaterLevel < 30) {
-          healthChange += 2; // Less damage from drought
+          healthChange += 2;
         }
         
         if (org.traits.includes("heat-resistant") && seasonalSunlightLevel > 80) {
-          healthChange += 2; // Less damage from high heat
+          healthChange += 2;
         }
         
         if (org.traits.includes("water-efficient")) {
-          if (seasonalWaterLevel < 40) healthChange += 1; // Better survival in low water
+          if (seasonalWaterLevel < 40) healthChange += 1;
         }
         
         if (org.traits.includes("fast-growing") && org.health < 50) {
-          healthChange += 1; // Faster recovery
+          healthChange += 1;
         }
         
-        // Apply random small variations
         healthChange += Math.random() * 2 - 1;
         
-        // Calculate adaptation points gain - organisms under stress but surviving adapt
         if (org.health > 20 && org.health < 80) {
           adaptationGain = calculateAdaptationGain(org, seasonalWaterLevel, seasonalSunlightLevel, biome);
           
-          // More adaptation during challenging seasons for the organism type
           if (
             (currentSeason === "winter" && ["tree", "grass", "flower"].includes(org.type)) ||
             (currentSeason === "summer" && ["rabbit", "fox"].includes(org.type))
@@ -142,11 +147,9 @@ export function useBiome() {
           }
         }
         
-        // Check for evolution to next stage
         const newAdaptationPoints = org.adaptationPoints + adaptationGain;
         const nextStage = getNextEvolutionStage(org.type, org.stage, newAdaptationPoints);
         
-        // If evolving to a new stage, get the new traits
         let newTraits = [...org.traits];
         if (nextStage > org.stage) {
           const evolutionInfo = getEvolutionInfo(org.type, nextStage);
@@ -162,14 +165,76 @@ export function useBiome() {
         };
       });
       
-      // Remove dead organisms
       const livingOrganisms = updatedOrganisms.filter(org => org.health > 0);
       
-      // Update biome health based on biodiversity and organism health
+      const now = Date.now();
+      const newOffspring: Organism[] = [];
+      const newReproductionEvents: ReproductionEvent[] = [];
+      
+      const environmentFactor = calculateEnvironmentSuitability(seasonalWaterLevel, seasonalSunlightLevel, currentSeason);
+      
+      const typeCount = livingOrganisms.reduce((counts, org) => {
+        counts[org.type] = (counts[org.type] || 0) + 1;
+        return counts;
+      }, {} as Record<string, number>);
+      
+      livingOrganisms.forEach(organism => {
+        const lastReproduction = reproductionCooldowns.current.get(organism.id) || 0;
+        if (now - lastReproduction < 10000 / simulationSpeed) return;
+        
+        const maxPopulation = getMaxPopulation(organism.type);
+        if ((typeCount[organism.type] || 0) >= maxPopulation) return;
+        
+        const mates = findPotentialMates(organism, livingOrganisms);
+        
+        if (mates.length > 0) {
+          const mate = mates[Math.floor(Math.random() * mates.length)];
+          
+          const reproductionChance = calculateReproductionChance(
+            organism, 
+            mate, 
+            environmentFactor
+          ) * (simulationSpeed / 5);
+          
+          if (Math.random() < reproductionChance) {
+            const offspring = createOffspring(organism, mate);
+            newOffspring.push(offspring);
+            
+            reproductionCooldowns.current.set(organism.id, now);
+            reproductionCooldowns.current.set(mate.id, now);
+            
+            newReproductionEvents.push({
+              id: uuidv4(),
+              position: offspring.position,
+              timestamp: now,
+              type: organism.type
+            });
+            
+            organism.health = Math.max(40, organism.health - 10);
+            mate.health = Math.max(40, mate.health - 10);
+            
+            if (offspring && (!typeCount[offspring.type] || typeCount[offspring.type] < 3)) {
+              toast.success(`New ${offspring.type} born!`, {
+                description: "Your ecosystem is growing through natural reproduction."
+              });
+            }
+          }
+        }
+      });
+      
+      if (newOffspring.length > 0) {
+        setOrganisms([...livingOrganisms, ...newOffspring]);
+      } else {
+        setOrganisms(livingOrganisms);
+      }
+      
+      if (newReproductionEvents.length > 0) {
+        setReproductionEvents(prev => [...prev, ...newReproductionEvents]);
+      }
+      
       const totalHealth = livingOrganisms.reduce((sum, org) => sum + org.health, 0);
       const averageHealth = livingOrganisms.length > 0 ? totalHealth / livingOrganisms.length : 0;
       
-      // Check for ecosystem balance
       const producerCount = livingOrganisms.filter(org => 
         ["tree", "grass", "flower", "cactus", "bush", "seaweed", "coral"].includes(org.type)
       ).length;
@@ -184,54 +249,99 @@ export function useBiome() {
       
       let balanceScore = 0;
       
-      // Simple balance check - having all three types is good
       if (producerCount > 0) balanceScore += 25;
       if (consumerCount > 0) balanceScore += 25;
       if (decomposerCount > 0) balanceScore += 25;
       
-      // Producer:Consumer ratio should be roughly 2:1
       if (producerCount >= consumerCount * 2) balanceScore += 25;
       else if (consumerCount > producerCount) balanceScore -= 25;
       
-      // Update ecosystem health
       const newBiomeHealth = Math.max(10, Math.min(100, 
         averageHealth * 0.4 + balanceScore * 0.6
       ));
       
       setOrganisms(livingOrganisms);
       setBiomeHealth(newBiomeHealth);
-    }, intervalDuration); // Run simulation based on speed
+    }, intervalDuration);
     
     return () => clearInterval(intervalId);
   }, [organisms, waterLevel, sunlightLevel, biome, simulationSpeed, isPaused, currentSeason, seasonData]);
 
-  // Add a new organism to the ecosystem
+  const calculateEnvironmentSuitability = (water: number, sunlight: number, season: string): number => {
+    let suitability = 0.7;
+    
+    if (water < 30 || water > 70) {
+      suitability *= 0.7;
+    }
+    
+    if (sunlight < 40 || sunlight > 80) {
+      suitability *= 0.8;
+    }
+    
+    switch (season) {
+      case "spring":
+        suitability *= 1.5;
+        break;
+      case "winter":
+        suitability *= 0.4;
+        break;
+      case "autumn":
+        suitability *= 0.7;
+        break;
+    }
+    
+    return Math.min(suitability, 1.0);
+  };
+  
+  const getMaxPopulation = (type: string): number => {
+    switch (type) {
+      case "tree":
+      case "grass":
+      case "flower":
+      case "cactus":
+      case "bush":
+      case "seaweed":
+      case "coral":
+        return 20;
+      case "rabbit":
+      case "lizard":
+      case "fish":
+        return 15;
+      case "fox":
+      case "snake":
+      case "crab":
+        return 10;
+      case "fungi":
+      case "beetle":
+      case "starfish":
+        return 12;
+      default:
+        return 10;
+    }
+  };
+
   const addOrganism = (type: string, position: OrganismPosition): boolean => {
-    // Check if position is already occupied (simple collision detection)
     const isPositionOccupied = organisms.some(org => {
       const distance = Math.sqrt(
         Math.pow(org.position.x - position.x, 2) + 
         Math.pow(org.position.y - position.y, 2)
       );
-      return distance < 10; // 10% of the biome width/height
+      return distance < 10;
     });
     
     if (isPositionOccupied) {
       return false;
     }
     
-    // Apply seasonal effects to environment conditions
     const seasonalWaterLevel = Math.max(0, Math.min(100, waterLevel + seasonData.waterModifier));
     const seasonalSunlightLevel = Math.max(0, Math.min(100, sunlightLevel + seasonData.sunlightModifier));
     
-    // Check if environmental conditions are suitable
     let canSurvive = true;
     
     switch (type) {
       case "tree":
       case "flower":
         if (seasonalWaterLevel < 30 || seasonalSunlightLevel < 40) canSurvive = false;
-        // Extra difficulty planting in winter
         if (currentSeason === "winter") canSurvive = false;
         break;
       case "cactus":
@@ -246,45 +356,38 @@ export function useBiome() {
       return false;
     }
     
-    // Get initial evolution info
     const evolutionInfo = getEvolutionInfo(type, 0);
     
-    // Add the organism
     const newOrganism: Organism = {
       id: uuidv4(),
       type,
       position,
-      health: 100, // Start with full health
-      adaptationPoints: 0, // Start with no adaptation points
-      stage: 0, // Start at the first evolution stage
-      traits: evolutionInfo.traits // Get initial traits
+      health: 100,
+      adaptationPoints: 0,
+      stage: 0,
+      traits: evolutionInfo.traits
     };
     
     setOrganisms(prev => [...prev, newOrganism]);
     return true;
   };
 
-  // Remove an organism from the ecosystem
   const removeOrganism = (id: string) => {
     setOrganisms(prev => prev.filter(org => org.id !== id));
   };
 
-  // Adjust water level
   const adjustWater = (level: number) => {
     setWaterLevel(level);
   };
 
-  // Adjust sunlight level
   const adjustSunlight = (level: number) => {
     setSunlightLevel(level);
   };
 
-  // Adjust simulation speed
   const adjustSimulationSpeed = (speed: number) => {
     setSimulationSpeed(speed);
   };
 
-  // Toggle simulation pause state
   const togglePause = () => {
     setIsPaused(prev => !prev);
   };
@@ -297,6 +400,7 @@ export function useBiome() {
     sunlightLevel,
     simulationSpeed,
     isPaused,
+    reproductionEvents,
     addOrganism,
     removeOrganism,
     adjustWater,

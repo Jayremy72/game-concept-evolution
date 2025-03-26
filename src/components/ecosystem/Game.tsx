@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
@@ -21,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Pause, Play, FastForward, ArrowRightFromLine, 
   ArrowLeftFromLine, BarChart4, Calendar, ChevronDown,
-  Settings2, Droplets, Sun
+  Settings2, Droplets, Sun, Users
 } from "lucide-react";
 import {
   Sheet,
@@ -48,7 +47,8 @@ const Game = () => {
     simulationSpeed,
     adjustSimulationSpeed,
     isPaused,
-    togglePause
+    togglePause,
+    reproductionEvents
   } = useBiome();
   
   const { 
@@ -77,7 +77,7 @@ const Game = () => {
     });
   };
 
-  const handleBiomeClick = (x: number, y: number) => {
+  const handleAddOrganism = (speciesId: string, x: number, y: number) => {
     if (selectedSpecies) {
       const success = addOrganism(selectedSpecies, { x, y });
       if (success) {
@@ -98,7 +98,7 @@ const Game = () => {
     }
   };
 
-  const handleOrganismClick = (id: string) => {
+  const handleSelectOrganism = (id: string) => {
     const organism = organisms.find(o => o.id === id);
     if (organism) {
       setInspectedOrganism(organism);
@@ -285,14 +285,15 @@ const Game = () => {
           {/* Ecosystem Window (middle) */}
           <div className="flex-grow my-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <BiomeView 
-              biomeType={biome}
               organisms={organisms}
-              onBiomeClick={handleBiomeClick}
-              selectedSpecies={selectedSpecies}
-              onOrganismClick={handleOrganismClick}
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
-              currentSeason={currentSeason}
+              biomeType={biome}
+              selectedSpecies={selectedSpecies}
+              onAddOrganism={handleAddOrganism}
+              onSelectOrganism={handleSelectOrganism}
+              isPaused={isPaused}
+              reproductionEvents={reproductionEvents}
             />
           </div>
           
