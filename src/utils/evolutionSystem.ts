@@ -1,5 +1,4 @@
-
-import { EvolutionMap } from "@/types/ecosystem";
+import { Organism, EvolutionStage } from "@/types/ecosystem";
 
 // Define evolution paths for each organism type
 export const evolutionPaths: EvolutionMap = {
@@ -266,7 +265,13 @@ export const getNextEvolutionStage = (type: string, currentStage: number, adapta
 };
 
 // Get evolution information for an organism
-export const getEvolutionInfo = (type: string, stage: number): EvolutionStage => {
+export const getEvolutionInfo = (type: string, stage: number): {
+  name: string;
+  icon: string;
+  traits: string[];
+  description: string;
+  threshold: number;
+} => {
   const stages = evolutionPaths[type] || [];
   return stages[stage] || { 
     stage: 0, 

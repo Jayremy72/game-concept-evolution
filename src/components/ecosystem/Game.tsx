@@ -6,6 +6,11 @@ import StatsPanel from "./StatsPanel";
 import EvolutionPanel from "./EvolutionPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { useBiome } from "@/hooks/useBiome";
+import { 
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle
+} from "@/components/ui/resizable";
 
 const Game = () => {
   const { toast } = useToast();
@@ -67,33 +72,50 @@ const Game = () => {
     removeOrganism(id);
   };
 
+  // Calculate the evolution panel height based on number of unique organism types
+  const organismTypeStages = new Set(organisms.map(org => `${org.type}-${org.stage}`));
+  const evolutionPanelMinHeight = Math.max(300, organismTypeStages.size * 150);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
-      <div className="md:col-span-3 order-2 md:order-1">
-        <BiomeView 
-          biomeType={biome}
-          organisms={organisms}
-          onBiomeClick={handleBiomeClick}
-          selectedSpecies={selectedSpecies}
-          onOrganismClick={handleOrganismClick}
-          waterLevel={waterLevel}
-          sunlightLevel={sunlightLevel}
-        />
-      </div>
-      <div className="md:col-span-1 space-y-4 order-1 md:order-2">
-        <StatsPanel 
-          biomeHealth={biomeHealth} 
-          waterLevel={waterLevel}
-          sunlightLevel={sunlightLevel}
-          onAdjustWater={adjustWater}
-          onAdjustSunlight={adjustSunlight}
-        />
-        <EvolutionPanel organisms={organisms} />
-        <SpeciesPanel 
-          biomeType={biome} 
-          onSelectSpecies={handleSpeciesSelect} 
-          selectedSpecies={selectedSpecies}
-        />
+    <div className="flex flex-col h-full gap-4">
+      <div className="flex flex-col md:flex-row gap-4 flex-grow">
+        <div className="md:w-3/4 flex flex-col">
+          <StatsPanel 
+            biomeHealth={biomeHealth} 
+            waterLevel={waterLevel}
+            sunlightLevel={sunlightLevel}
+            onAdjustWater={adjustWater}
+            onAdjustSunlight={adjustSunlight}
+          />
+          <div className="mt-4 flex-grow">
+            <BiomeView 
+              biomeType={biome}
+              organisms={organisms}
+              onBiomeClick={handleBiomeClick}
+              selectedSpecies={selectedSpecies}
+              onOrganismClick={handleOrganismClick}
+              waterLevel={waterLevel}
+              sunlightLevel={sunlightLevel}
+            />
+          </div>
+        </div>
+        <div className="md:w-1/4">
+          <ResizablePanelGroup direction="vertical" className="min-h-[400px]">
+            <ResizablePanel defaultSize={70} minSize={30}>
+              <EvolutionPanel organisms={organisms} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={30} minSize={20}>
+              <div className="h-full overflow-hidden">
+                <SpeciesPanel 
+                  biomeType={biome} 
+                  onSelectSpecies={handleSpeciesSelect} 
+                  selectedSpecies={selectedSpecies}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
       </div>
     </div>
   );
