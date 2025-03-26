@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import BiomeView from "./BiomeView";
 import SpeciesPanel from "./SpeciesPanel";
@@ -132,11 +131,10 @@ const Game = () => {
           {/* Stats Panel (above) */}
           <div className="flex gap-4">
             <StatsPanel 
+              organisms={organisms}
               biomeHealth={biomeHealth} 
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
-              onAdjustWater={adjustWater}
-              onAdjustSunlight={adjustSunlight}
               className="flex-grow"
             />
             
