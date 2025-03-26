@@ -4,6 +4,8 @@ import Confetti from "react-confetti";
 import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
 import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EvolutionCelebrationProps {
   organism: Organism;
@@ -21,7 +23,7 @@ const EvolutionCelebration: React.FC<EvolutionCelebrationProps> = ({
   const currentEvolution = getEvolutionInfo(organism.type, organism.stage);
   const previousEvolution = getEvolutionInfo(organism.type, organism.stage - 1);
   
-  // Update dimensions when window resizes
+  // Update dimensions when window resizes and handle auto-close
   useEffect(() => {
     const handleResize = () => {
       setDimensions({
@@ -44,6 +46,7 @@ const EvolutionCelebration: React.FC<EvolutionCelebrationProps> = ({
       });
     }, 1000);
     
+    // Clean up event listeners and timers
     return () => {
       window.removeEventListener('resize', handleResize);
       clearInterval(timer);
@@ -66,6 +69,17 @@ const EvolutionCelebration: React.FC<EvolutionCelebrationProps> = ({
       />
       
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 max-w-md w-full text-center relative overflow-hidden">
+        {/* Close button - Made larger and more obvious */}
+        <Button 
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute right-2 top-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-20"
+          aria-label="Close celebration"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-repeat" 
             style={{ 
@@ -122,8 +136,18 @@ const EvolutionCelebration: React.FC<EvolutionCelebrationProps> = ({
             </div>
           </div>
           
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-4">
-            Auto-closing in {countdown} seconds...
+          <div className="mt-4 flex justify-between items-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Auto-closing in {countdown} seconds...
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onClose}
+              className="text-xs"
+            >
+              Close
+            </Button>
           </div>
         </div>
       </div>

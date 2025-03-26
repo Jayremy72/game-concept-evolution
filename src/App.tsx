@@ -82,7 +82,7 @@ function App() {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* App Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm p-4 flex justify-between items-center">
+      <header className="bg-white dark:bg-gray-800 shadow-sm p-3 flex justify-between items-center">
         <h1 className="text-xl font-bold">Ecosystem Architect</h1>
         <div className="flex items-center gap-2">
           <Checkbox 
@@ -94,10 +94,10 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Made taller by reducing padding and making content take more space */}
       <div className="flex-grow flex flex-col md:flex-row overflow-hidden">
-        {/* Left Panel - Species Selection & Evolution */}
-        <div className="w-full md:w-96 bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col">
+        {/* Left Panel - Species Selection & Evolution - Made narrower */}
+        <div className="w-full md:w-80 bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col">
           <Tabs defaultValue="species" className="h-full flex flex-col">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="species">Species</TabsTrigger>
@@ -128,17 +128,17 @@ function App() {
           </Tabs>
         </div>
         
-        {/* Center Area - Biome Canvas */}
-        <div className="flex-grow flex flex-col p-4 overflow-hidden">
+        {/* Center Area - Biome Canvas - Made larger by reducing padding */}
+        <div className="flex-grow flex flex-col p-2 overflow-hidden">
           {/* Season Indicator */}
-          <div className="mb-2">
+          <div className="mb-1">
             <SeasonIndicator 
               currentSeason={currentSeason} 
               seasonProgress={seasonProgress} 
             />
           </div>
           
-          {/* Biome Canvas */}
+          {/* Biome Canvas - Made taller */}
           <div className="flex-grow">
             <BiomeCanvas 
               organisms={organisms}
@@ -152,8 +152,8 @@ function App() {
             />
           </div>
           
-          {/* Control Panel */}
-          <div className="mt-4">
+          {/* Control Panel - Made more compact */}
+          <div className="mt-1">
             <ControlPanel 
               waterLevel={waterLevel}
               sunlightLevel={sunlightLevel}
@@ -167,9 +167,9 @@ function App() {
           </div>
         </div>
 
-        {/* Conditional Right Panel - Evolution Panel */}
+        {/* Conditional Right Panel - Evolution Panel - Made narrower */}
         {showEvolutionPanel && (
-          <div className="w-full md:w-96 bg-white dark:bg-gray-800 shadow-sm overflow-auto">
+          <div className="w-full md:w-80 bg-white dark:bg-gray-800 shadow-sm overflow-auto">
             <EvolutionPanel organisms={organisms} />
           </div>
         )}
