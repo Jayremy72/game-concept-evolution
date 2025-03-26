@@ -19,9 +19,15 @@ export function useBiome() {
   const [organisms, setOrganisms] = useState<Organism[]>([]);
   const [waterLevel, setWaterLevel] = useState<number>(50);
   const [sunlightLevel, setSunlightLevel] = useState<number>(60);
+  const [simulationSpeed, setSimulationSpeed] = useState<number>(5);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   
   // Create interactions between species and environment
   useEffect(() => {
+    if (isPaused) return;
+    
+    const intervalDuration = 2000 / simulationSpeed;
+    
     const intervalId = setInterval(() => {
       // Update organism health based on environmental factors
       const updatedOrganisms = organisms.map(org => {
@@ -163,10 +169,10 @@ export function useBiome() {
       
       setOrganisms(livingOrganisms);
       setBiomeHealth(newBiomeHealth);
-    }, 2000); // Run simulation every 2 seconds
+    }, intervalDuration); // Run simulation based on speed
     
     return () => clearInterval(intervalId);
-  }, [organisms, waterLevel, sunlightLevel, biome]);
+  }, [organisms, waterLevel, sunlightLevel, biome, simulationSpeed, isPaused]);
 
   // Add a new organism to the ecosystem
   const addOrganism = (type: string, position: OrganismPosition): boolean => {
@@ -236,15 +242,29 @@ export function useBiome() {
     setSunlightLevel(level);
   };
 
+  // Adjust simulation speed
+  const adjustSimulationSpeed = (speed: number) => {
+    setSimulationSpeed(speed);
+  };
+
+  // Toggle simulation pause state
+  const togglePause = () => {
+    setIsPaused(prev => !prev);
+  };
+
   return {
     biome,
     biomeHealth,
     organisms,
     waterLevel,
     sunlightLevel,
+    simulationSpeed,
+    isPaused,
     addOrganism,
     removeOrganism,
     adjustWater,
     adjustSunlight,
+    adjustSimulationSpeed,
+    togglePause
   };
 }
