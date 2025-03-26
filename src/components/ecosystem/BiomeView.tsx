@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Cloud, Droplets, Sun } from "lucide-react";
 import { Organism } from "@/types/ecosystem";
 import { getEvolutionInfo } from "@/utils/evolutionSystem";
+import { Season } from "@/hooks/useSeasons";
 
 interface BiomeViewProps {
   biomeType: string;
@@ -13,6 +14,7 @@ interface BiomeViewProps {
   onOrganismClick: (id: string) => void;
   waterLevel: number;
   sunlightLevel: number;
+  currentSeason?: Season;
 }
 
 const BiomeView = ({
@@ -22,19 +24,99 @@ const BiomeView = ({
   selectedSpecies,
   onOrganismClick,
   waterLevel,
-  sunlightLevel
+  sunlightLevel,
+  currentSeason = "spring"
 }: BiomeViewProps) => {
-  // Define biome background based on type
+  // Define biome background based on type and season
   const getBiomeBackground = () => {
+    // Base biome colors
+    let biomeBaseClass = "";
     switch (biomeType) {
       case "forest":
-        return "bg-gradient-to-b from-green-300 to-green-600";
+        biomeBaseClass = "from-green-300 to-green-600";
+        break;
       case "desert":
-        return "bg-gradient-to-b from-yellow-200 to-yellow-500";
+        biomeBaseClass = "from-yellow-200 to-yellow-500";
+        break;
       case "ocean":
-        return "bg-gradient-to-b from-blue-300 to-blue-600";
+        biomeBaseClass = "from-blue-300 to-blue-600";
+        break;
       default:
-        return "bg-gradient-to-b from-green-300 to-green-600"; // Default to forest
+        biomeBaseClass = "from-green-300 to-green-600"; // Default to forest
+    }
+    
+    // Apply seasonal modifications
+    if (biomeType === "forest") {
+      switch (currentSeason) {
+        case "spring":
+          return `bg-gradient-to-b from-green-200 to-green-500`;
+        case "summer":
+          return `bg-gradient-to-b from-green-300 to-green-600`;
+        case "autumn":
+          return `bg-gradient-to-b from-orange-200 to-yellow-600`;
+        case "winter":
+          return `bg-gradient-to-b from-blue-100 to-gray-300`;
+      }
+    } else if (biomeType === "desert") {
+      switch (currentSeason) {
+        case "summer":
+          return `bg-gradient-to-b from-yellow-100 to-yellow-600`;
+        case "winter":
+          return `bg-gradient-to-b from-yellow-200 to-yellow-400`;
+        default:
+          return `bg-gradient-to-b ${biomeBaseClass}`;
+      }
+    } else {
+      return `bg-gradient-to-b ${biomeBaseClass}`;
+    }
+  };
+
+  // Get seasonal overlay
+  const getSeasonalOverlay = () => {
+    switch (currentSeason) {
+      case "winter":
+        return (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center opacity-10">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div 
+                  key={i}
+                  className="absolute text-white text-3xl animate-fall"
+                  style={{ 
+                    left: `${Math.random() * 100}%`, 
+                    animationDuration: `${5 + Math.random() * 10}s`,
+                    animationDelay: `${Math.random() * 5}s`
+                  }}
+                >
+                  ❄️
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case "autumn":
+        return (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center opacity-10">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div 
+                  key={i}
+                  className="absolute text-orange-500 text-3xl animate-fall animate-spin-slow"
+                  style={{ 
+                    left: `${Math.random() * 100}%`, 
+                    animationDuration: `${8 + Math.random() * 7}s`,
+                    animationDelay: `${Math.random() * 5}s`
+                  }}
+                >
+                  🍂
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -67,6 +149,13 @@ const BiomeView = ({
     // Size based on evolution stage
     const sizeClass = stage === 0 ? "text-xl" : stage === 1 ? "text-2xl" : "text-3xl";
     
+    // Special seasonal styles
+    if (currentSeason === "winter" && (type === "tree" || type === "grass")) {
+      baseStyle = "text-gray-600"; // Winter dormancy for plants
+    } else if (currentSeason === "autumn" && type === "tree") {
+      baseStyle = "text-orange-700"; // Fall colors for trees
+    }
+    
     return `${baseStyle} ${sizeClass}`;
   };
 
@@ -91,6 +180,9 @@ const BiomeView = ({
         )}
         onClick={handleAreaClick}
       >
+        {/* Seasonal overlay effects */}
+        {getSeasonalOverlay()}
+        
         {/* Dynamic environment indicators */}
         <div className="absolute top-4 right-4 flex space-x-2">
           <div className="bg-white/30 backdrop-blur-sm p-2 rounded-full">
@@ -139,7 +231,11 @@ const BiomeView = ({
 
         {/* Ground layer for forest biome */}
         {biomeType === "forest" && (
-          <div className="absolute bottom-0 w-full h-1/6 bg-gradient-to-t from-brown-600 to-green-700"></div>
+          <div className={`absolute bottom-0 w-full h-1/6 ${
+            currentSeason === "winter" ? "bg-gradient-to-t from-gray-100 to-gray-300" : 
+            currentSeason === "autumn" ? "bg-gradient-to-t from-orange-800 to-orange-600" :
+            "bg-gradient-to-t from-brown-600 to-green-700"
+          }`}></div>
         )}
         
         {/* Sand for desert biome */}
