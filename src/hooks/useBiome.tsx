@@ -7,7 +7,6 @@ import {
   getEvolutionInfo, 
   calculateAdaptationGain 
 } from "@/utils/evolutionSystem";
-import { useSeasons } from "@/hooks/useSeasons";
 
 interface OrganismPosition {
   x: number;
@@ -20,26 +19,10 @@ export function useBiome() {
   const [organisms, setOrganisms] = useState<Organism[]>([]);
   const [waterLevel, setWaterLevel] = useState<number>(50);
   const [sunlightLevel, setSunlightLevel] = useState<number>(60);
-  const [simulationSpeed, setSimulationSpeed] = useState<number>(5);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
   
-  // Initialize seasons
-  const { 
-    currentSeason, 
-    seasonData 
-  } = useSeasons(simulationSpeed);
-  
-  // Create interactions between species, environment, and seasons
+  // Create interactions between species and environment
   useEffect(() => {
-    if (isPaused) return;
-    
-    const intervalDuration = 2000 / simulationSpeed;
-    
     const intervalId = setInterval(() => {
-      // Apply seasonal effects to environment
-      const seasonalWaterLevel = Math.max(0, Math.min(100, waterLevel + seasonData.waterModifier));
-      const seasonalSunlightLevel = Math.max(0, Math.min(100, sunlightLevel + seasonData.sunlightModifier));
-      
       // Update organism health based on environmental factors
       const updatedOrganisms = organisms.map(org => {
         let healthChange = 0;
@@ -55,14 +38,11 @@ export function useBiome() {
           case "seaweed":
           case "coral":
             // Producers need sunlight and water
-            if (seasonalSunlightLevel > 70) healthChange += 2;
-            else if (seasonalSunlightLevel < 30) healthChange -= 2;
+            if (sunlightLevel > 70) healthChange += 2;
+            else if (sunlightLevel < 30) healthChange -= 2;
             
-            if (seasonalWaterLevel > 60) healthChange += 2;
-            else if (seasonalWaterLevel < 30) healthChange -= 3;
-            
-            // Apply seasonal growth modifier
-            healthChange *= seasonData.growthModifier;
+            if (waterLevel > 60) healthChange += 2;
+            else if (waterLevel < 30) healthChange -= 3;
             break;
             
           case "rabbit":
@@ -75,10 +55,7 @@ export function useBiome() {
             if (hasFood) healthChange += 1;
             else healthChange -= 3;
             
-            if (seasonalWaterLevel < 20) healthChange -= 2;
-            
-            // Animals struggle more in winter
-            if (currentSeason === "winter") healthChange -= 1;
+            if (waterLevel < 20) healthChange -= 2;
             break;
             
           case "fox":
@@ -90,9 +67,6 @@ export function useBiome() {
             );
             if (hasPrey) healthChange += 1;
             else healthChange -= 2;
-            
-            // Animals struggle more in winter
-            if (currentSeason === "winter") healthChange -= 0.5;
             break;
             
           case "fungi":
@@ -102,24 +76,21 @@ export function useBiome() {
             const hasDeadMatter = organisms.some(o => o.health < 30);
             if (hasDeadMatter) healthChange += 2;
             
-            if (seasonalWaterLevel > 40) healthChange += 1;
-            
-            // Decomposers do better in autumn
-            if (currentSeason === "autumn") healthChange += 1;
+            if (waterLevel > 40) healthChange += 1;
             break;
         }
 
         // Apply traits effects
-        if (org.traits.includes("drought-resistant") && seasonalWaterLevel < 30) {
+        if (org.traits.includes("drought-resistant") && waterLevel < 30) {
           healthChange += 2; // Less damage from drought
         }
         
-        if (org.traits.includes("heat-resistant") && seasonalSunlightLevel > 80) {
+        if (org.traits.includes("heat-resistant") && sunlightLevel > 80) {
           healthChange += 2; // Less damage from high heat
         }
         
         if (org.traits.includes("water-efficient")) {
-          if (seasonalWaterLevel < 40) healthChange += 1; // Better survival in low water
+          if (waterLevel < 40) healthChange += 1; // Better survival in low water
         }
         
         if (org.traits.includes("fast-growing") && org.health < 50) {
@@ -131,15 +102,7 @@ export function useBiome() {
         
         // Calculate adaptation points gain - organisms under stress but surviving adapt
         if (org.health > 20 && org.health < 80) {
-          adaptationGain = calculateAdaptationGain(org, seasonalWaterLevel, seasonalSunlightLevel, biome);
-          
-          // More adaptation during challenging seasons for the organism type
-          if (
-            (currentSeason === "winter" && ["tree", "grass", "flower"].includes(org.type)) ||
-            (currentSeason === "summer" && ["rabbit", "fox"].includes(org.type))
-          ) {
-            adaptationGain *= 1.5;
-          }
+          adaptationGain = calculateAdaptationGain(org, waterLevel, sunlightLevel, biome);
         }
         
         // Check for evolution to next stage
@@ -200,10 +163,10 @@ export function useBiome() {
       
       setOrganisms(livingOrganisms);
       setBiomeHealth(newBiomeHealth);
-    }, intervalDuration); // Run simulation based on speed
+    }, 2000); // Run simulation every 2 seconds
     
     return () => clearInterval(intervalId);
-  }, [organisms, waterLevel, sunlightLevel, biome, simulationSpeed, isPaused, currentSeason, seasonData]);
+  }, [organisms, waterLevel, sunlightLevel, biome]);
 
   // Add a new organism to the ecosystem
   const addOrganism = (type: string, position: OrganismPosition): boolean => {
@@ -220,25 +183,19 @@ export function useBiome() {
       return false;
     }
     
-    // Apply seasonal effects to environment conditions
-    const seasonalWaterLevel = Math.max(0, Math.min(100, waterLevel + seasonData.waterModifier));
-    const seasonalSunlightLevel = Math.max(0, Math.min(100, sunlightLevel + seasonData.sunlightModifier));
-    
     // Check if environmental conditions are suitable
     let canSurvive = true;
     
     switch (type) {
       case "tree":
       case "flower":
-        if (seasonalWaterLevel < 30 || seasonalSunlightLevel < 40) canSurvive = false;
-        // Extra difficulty planting in winter
-        if (currentSeason === "winter") canSurvive = false;
+        if (waterLevel < 30 || sunlightLevel < 40) canSurvive = false;
         break;
       case "cactus":
-        if (seasonalWaterLevel > 50) canSurvive = false;
+        if (waterLevel > 50) canSurvive = false;
         break;
       case "coral":
-        if (seasonalWaterLevel < 70) canSurvive = false;
+        if (waterLevel < 70) canSurvive = false;
         break;
     }
     
@@ -279,29 +236,15 @@ export function useBiome() {
     setSunlightLevel(level);
   };
 
-  // Adjust simulation speed
-  const adjustSimulationSpeed = (speed: number) => {
-    setSimulationSpeed(speed);
-  };
-
-  // Toggle simulation pause state
-  const togglePause = () => {
-    setIsPaused(prev => !prev);
-  };
-
   return {
     biome,
     biomeHealth,
     organisms,
     waterLevel,
     sunlightLevel,
-    simulationSpeed,
-    isPaused,
     addOrganism,
     removeOrganism,
     adjustWater,
     adjustSunlight,
-    adjustSimulationSpeed,
-    togglePause
   };
 }
